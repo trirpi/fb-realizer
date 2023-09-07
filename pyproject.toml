@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "fb-realizer"
+version = "0.1.0"
+description = "Automatic realization of figured bass."
+authors = ["Tristan Trouwen <tristan.trouwen@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+music21 = "^9.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

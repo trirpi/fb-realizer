@@ -1,2 +1,2 @@
-# fb-realizer
-Automatic realization of figured bass
+# Figured Bass Realizer
+> Automatic realization of figured bass.
