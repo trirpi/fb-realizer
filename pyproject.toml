@@ -6,8 +6,8 @@ authors = ["Tristan Trouwen <tristan.trouwen@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-music21 = "^9.1.0"
+python = "~3.10"
+jupyter = "^1.0.0"
 
 
 [build-system]
