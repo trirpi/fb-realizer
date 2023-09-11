@@ -1,7 +1,9 @@
 import logging
 import sys
+from pathlib import Path
 
-from realizer import realize
+from music21 import converter
+from music21.figuredBass import realizer
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -11,4 +13,8 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    realize()
+    file_path = Path.cwd() / "test_file.musicxml"
+    part = converter.parse(file_path).parts[-1]
+    fbLine2 = realizer.figuredBassFromStream(part)
+    fbRealization2 = fbLine2.realize()
+    fbRealization2.generateRandomRealization().show()
