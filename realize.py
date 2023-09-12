@@ -21,7 +21,8 @@ if __name__ == '__main__':
     # basso_continuo.flatten().getElementsByOffset(4).notes[0]
     fbLine2 = realizer.figuredBassFromStream(basso_continuo)
     fbRealization2 = fbLine2.realize()
-    realized = fbRealization2.generateOptimalRealization()
+    realized = fbRealization2.generateRandomRealization()
+    # realized = fbRealization2.generateOptimalRealization()
 
     stream = parts.stream()
     for part in realized.parts:
