@@ -13,7 +13,7 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    file_path = Path.cwd() / "test_file.musicxml"
+    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     fbLine2 = realizer.figuredBassFromStream(basso_continuo)
     fbRealization2 = fbLine2.realize()
     # realized = fbRealization2.generateRandomRealization()
-    realized = fbRealization2.generateOptimalRealization()
+    realized = fbRealization2.generate_optimal_realization()
 
     stream = parts.stream()
     for part in realized.parts:
