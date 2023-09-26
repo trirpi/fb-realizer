@@ -14,17 +14,13 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
+    file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
 
-    # basso_continuo.beatAndMeasureFromOffset()
-    # basso_continuo.flatten().getElementsByOffset(4).notes[0]
     fbLine = realizer.figuredBassFromStream(basso_continuo)
     fbRealization = fbLine.realize()
-    part = parts[0].flatten()
-    for note in part.notes:
-        print(note.offset)
+
     melody_parts = [p.flatten() for p in parts[:-1]]
     current_idx = [0 for _ in melody_parts]
     for segment in fbRealization._segmentList:
