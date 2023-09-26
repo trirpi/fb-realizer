@@ -4,6 +4,7 @@ from pathlib import Path
 
 from music21 import converter
 from music21.improvedFiguredBass import realizer
+from music21.note import Note
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -19,10 +20,27 @@ if __name__ == '__main__':
 
     # basso_continuo.beatAndMeasureFromOffset()
     # basso_continuo.flatten().getElementsByOffset(4).notes[0]
-    fbLine2 = realizer.figuredBassFromStream(basso_continuo)
-    fbRealization2 = fbLine2.realize()
+    fbLine = realizer.figuredBassFromStream(basso_continuo)
+    fbRealization = fbLine.realize()
+    part = parts[0].flatten()
+    for note in part.notes:
+        print(note.offset)
+    melody_parts = [p.flatten() for p in parts[:-1]]
+    current_idx = [0 for _ in melody_parts]
+    for segment in fbRealization._segmentList:
+        start_offset = segment.play_offsets[0]
+        for i, part in enumerate(melody_parts):
+            while current_idx[i] < len(part.notes) and part.notes[current_idx[i]].offset < start_offset:
+                current_idx[i] += 1
+            if not (current_idx[i] < len(part.notes) and part.notes[current_idx[i]].offset == start_offset):
+                if current_idx[i] == 0: continue
+                current_idx[i] -= 1
+            melody_note: Note = part.notes[current_idx[i]]
+            if not melody_note.isRest:
+                segment.melody_notes.add(part.notes[current_idx[i]])
+
     # realized = fbRealization2.generateRandomRealization()
-    realized = fbRealization2.generate_optimal_realization()
+    realized = fbRealization.generate_optimal_realization()
 
     stream = parts.stream()
     for part in realized.parts:
