@@ -14,7 +14,7 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
+    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz4.musicxml"
     # file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
@@ -25,6 +25,7 @@ if __name__ == '__main__':
     melody_parts = [p.flatten() for p in parts[:-1]]
     current_idx = [0 for _ in melody_parts]
     for segment in fbRealization._segmentList:
+        segment.dynamic = 'mf'
         start_offset = segment.play_offsets[0]
         for i, part in enumerate(melody_parts):
             while current_idx[i] < len(part.notes) and part.notes[current_idx[i]].offset < start_offset:
