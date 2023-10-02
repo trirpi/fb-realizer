@@ -14,7 +14,8 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    file_path = Path.cwd() / "test_pieces/test_file.musicxml"
+    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
+    # file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
 
