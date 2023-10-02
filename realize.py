@@ -4,7 +4,7 @@ from pathlib import Path
 
 from music21 import converter
 from music21.improvedFiguredBass import realizer
-from music21.note import Note
+from music21.note import GeneralNote
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -15,9 +15,13 @@ if __name__ == '__main__':
     )
     logging.log(logging.INFO, 'Started realizing.')
     file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz4.musicxml"
+    # file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
     # file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
+
+    # split fbLine on rests
+    # split melody pieces on rests as well?
 
     fbLine = realizer.figuredBassFromStream(basso_continuo)
     fbRealization = fbLine.realize()
@@ -28,13 +32,14 @@ if __name__ == '__main__':
         segment.dynamic = 'mf'
         start_offset = segment.play_offsets[0]
         for i, part in enumerate(melody_parts):
-            while current_idx[i] < len(part.notes) and part.notes[current_idx[i]].offset < start_offset:
+            elts = part.notesAndRests
+            while current_idx[i] < len(elts) and elts[current_idx[i]].offset < start_offset:
                 current_idx[i] += 1
-            if not (current_idx[i] < len(part.notes) and part.notes[current_idx[i]].offset == start_offset):
+            if not (current_idx[i] < len(elts) and elts[current_idx[i]].offset == start_offset):
                 if current_idx[i] == 0: continue
                 current_idx[i] -= 1
-            melody_note: Note = part.notes[current_idx[i]]
-            if not melody_note.isRest:
+            melody_note: GeneralNote = part.notesAndRests[current_idx[i]]
+            if melody_note.isNote:
                 segment.melody_notes.add(part.notes[current_idx[i]])
 
     # realized = fbRealization2.generateRandomRealization()
