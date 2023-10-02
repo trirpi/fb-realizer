@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from music21 import converter
+from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.note import GeneralNote
 
@@ -15,7 +16,7 @@ if __name__ == '__main__':
     )
     logging.log(logging.INFO, 'Started realizing.')
     file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz4.musicxml"
-    # file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
+    file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
     # file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo = parts[-1]
@@ -28,9 +29,20 @@ if __name__ == '__main__':
 
     melody_parts = [p.flatten() for p in parts[:-1]]
     current_idx = [0 for _ in melody_parts]
+    dynamic_idx = 0
+    dynamic_elts = melody_parts[2].getElementsByClass(Dynamic)
     for segment in fbRealization._segmentList:
         segment.dynamic = 'mf'
         start_offset = segment.play_offsets[0]
+        # do the rest dynamics stuff
+        while dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset < start_offset:
+            dynamic_idx += 1
+        if not (dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset == start_offset):
+            if dynamic_idx == 0: continue
+            dynamic_idx -= 1
+        segment.dynamic = dynamic_elts[dynamic_idx].value
+
+        # do the melody stuff
         for i, part in enumerate(melody_parts):
             elts = part.notesAndRests
             while current_idx[i] < len(elts) and elts[current_idx[i]].offset < start_offset:
@@ -38,9 +50,9 @@ if __name__ == '__main__':
             if not (current_idx[i] < len(elts) and elts[current_idx[i]].offset == start_offset):
                 if current_idx[i] == 0: continue
                 current_idx[i] -= 1
-            melody_note: GeneralNote = part.notesAndRests[current_idx[i]]
+            melody_note: GeneralNote = elts[current_idx[i]]
             if melody_note.isNote:
-                segment.melody_notes.add(part.notes[current_idx[i]])
+                segment.melody_notes.add(elts[current_idx[i]])
 
     # realized = fbRealization2.generateRandomRealization()
     realized = fbRealization.generate_optimal_realization()
