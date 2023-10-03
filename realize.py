@@ -24,26 +24,15 @@ if __name__ == '__main__':
     # split fbLine on rests
     # split melody pieces on rests as well?
 
+    logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(basso_continuo)
     fbRealization = fbLine.realize()
 
+    logging.log(logging.INFO, 'Parse melody notes.')
     melody_parts = [p.flatten() for p in parts[:-1]]
     current_idx = [0 for _ in melody_parts]
-    dynamic_idx = 0
-    dynamic_elts = melody_parts[0].getElementsByClass(Dynamic)
     for segment in fbRealization._segmentList:
-        segment.dynamic = 'mf'
         start_offset = segment.play_offsets[0]
-        # do the rest dynamics stuff
-        while dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset < start_offset:
-            dynamic_idx += 1
-        if not (dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset == start_offset):
-            if dynamic_idx == 0: continue
-            dynamic_idx -= 1
-        segment.dynamic = dynamic_elts[dynamic_idx].value
-
-    for segment in fbRealization._segmentList:
-        # do the melody stuff
         for i, part in enumerate(melody_parts):
             elts = part.notesAndRests
             while current_idx[i] < len(elts) and elts[current_idx[i]].offset < start_offset:
@@ -55,6 +44,20 @@ if __name__ == '__main__':
             if melody_note.isNote:
                 segment.melody_notes.add(elts[current_idx[i]])
 
+    logging.log(logging.INFO, 'Parse dynamic markings.')
+    dynamic_idx = 0
+    dynamic_elts = melody_parts[0].getElementsByClass(Dynamic)
+    for segment in fbRealization._segmentList:
+        segment.dynamic = 'mf'
+        start_offset = segment.play_offsets[0]
+        while dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset < start_offset:
+            dynamic_idx += 1
+        if not (dynamic_idx < len(dynamic_elts) and dynamic_elts[dynamic_idx].offset == start_offset):
+            if dynamic_idx == 0: continue
+            dynamic_idx -= 1
+        segment.dynamic = dynamic_elts[dynamic_idx].value
+
+    logging.log(logging.INFO, 'Generating optimal realization.')
     # realized = fbRealization2.generateRandomRealization()
     realized = fbRealization.generate_optimal_realization()
 
