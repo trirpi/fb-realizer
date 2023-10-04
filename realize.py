@@ -66,6 +66,9 @@ def split_on_rests(bc, melodies):
             new_mels = []
             for mel in current_melodies:
                 prev_mel, curr_mel = mel.splitAtQuarterLength(rest_end)
+                dynamics = prev_mel.getElementsByClass(Dynamic)
+                if len(dynamics) > 0 and dynamics[-1].offset == rest_end:
+                    curr_mel.insert(0, dynamics[-1])
                 prev_mels.append(prev_mel)
                 new_mels.append(curr_mel)
             current_melodies = new_mels
@@ -104,7 +107,7 @@ if __name__ == '__main__':
     )
     logging.log(logging.INFO, 'Started realizing.')
     # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
-    file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni2.musicxml"
+    file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
     basso_continuo = basso_continuo_part.flatten().notesAndRests
