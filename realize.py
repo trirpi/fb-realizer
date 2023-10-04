@@ -103,10 +103,8 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz4.musicxml"
-    # file_path = Path.cwd() / "test_pieces/rest_test.musicxml"
+    # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
     file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni2.musicxml"
-    # file_path = Path.cwd() / "test_pieces/test_file.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
     basso_continuo = basso_continuo_part.flatten().notesAndRests
