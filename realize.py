@@ -27,8 +27,11 @@ def add_melody_notes(segments, melody_parts):
                 segment.melody_notes.add(elts[idxs[i]])
 
 
-def add_dynamic_markings(segments, melody_parts):
+def add_dynamic_markings(segments, melody_parts, prev_dynamic=None):
     """Fills in the segments dynamic attribute."""
+    if prev_dynamic is None:
+        prev_dynamic = 'mf'
+
     parts = [part.getElementsByClass(Dynamic) for part in melody_parts]
     idxs = [0] * len(melody_parts)
     for segment in segments:
@@ -37,9 +40,21 @@ def add_dynamic_markings(segments, melody_parts):
             while idxs[i] < len(elts) and elts[idxs[i]].offset < start_offset:
                 idxs[i] += 1
             if not (idxs[i] < len(elts) and elts[idxs[i]].offset == start_offset):
-                if idxs[i] == 0: continue
+                if idxs[i] == 0:
+                    continue
                 idxs[i] -= 1
-            segment.dynamic = elts[idxs[i]].value
+            prev_dynamic = elts[idxs[i]].value
+        segment.dynamic = prev_dynamic
+
+    last_dynamic = prev_dynamic
+    last_offset = segments[-1].play_offsets[0]
+    for i, elts in enumerate(parts):
+        if len(elts) == 0:
+            continue
+        if elts[-1].offset > last_offset:
+            last_dynamic = elts[-1].value
+            last_offset = elts[-1].offset
+    return last_dynamic
 
 
 def split_on_rests(bc, melodies):
@@ -81,7 +96,7 @@ def split_on_rests(bc, melodies):
     return result, rests
 
 
-def create_figured_bass(bass, melody_parts):
+def create_figured_bass(bass, melody_parts, previous_dynamic_marking):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(bass)
     fbRealization = fbLine.realize()
@@ -90,12 +105,12 @@ def create_figured_bass(bass, melody_parts):
     add_melody_notes(fbRealization._segmentList, melody_parts)
 
     logging.log(logging.INFO, 'Parse dynamic markings.')
-    add_dynamic_markings(fbRealization._segmentList, melody_parts)
+    last_dynamic = add_dynamic_markings(fbRealization._segmentList, melody_parts, previous_dynamic_marking)
 
     logging.log(logging.INFO, 'Generating optimal realization.')
     realized = fbRealization.generate_optimal_realization()
 
-    return realized
+    return realized, last_dynamic
 
 
 if __name__ == '__main__':
@@ -108,6 +123,7 @@ if __name__ == '__main__':
     logging.log(logging.INFO, 'Started realizing.')
     # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
     file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
+    # file_path = Path.cwd() / "test_pieces/rest_test3.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
     basso_continuo = basso_continuo_part.flatten().notesAndRests
@@ -120,13 +136,14 @@ if __name__ == '__main__':
     full_bass.append(TimeSignature('2/4'))
     full_harmonies = Stream()
     full_harmonies.append(TimeSignature('2/4'))
+    prev_dynamic = None
     for i, (bass, melodies) in enumerate(tups):
         if i > 0:
             full_bass.append(rests[i - 1])
             full_harmonies.append(rests[i - 1])
         if len(bass) == 0:
             continue
-        realization = create_figured_bass(bass, melodies)
+        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic)
         new_harmonies, new_bass = (p.flatten() for p in realization.parts)
         for note in new_harmonies.notes:
             full_harmonies.append(note)
