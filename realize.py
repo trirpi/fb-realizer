@@ -5,6 +5,7 @@ from pathlib import Path
 from music21 import converter
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
+from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
 from music21.meter import TimeSignature
 from music21.note import GeneralNote
 from music21.stream import Stream, Score, Part
@@ -96,10 +97,10 @@ def split_on_rests(bc, melodies):
     return result, rests
 
 
-def create_figured_bass(bass, melody_parts, previous_dynamic_marking):
+def create_figured_bass(bass, melody_parts, previous_dynamic_marking, rule_set):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(bass)
-    fbRealization = fbLine.realize()
+    fbRealization = fbLine.realize(rule_set=rule_set)
 
     logging.log(logging.INFO, 'Parse melody notes.')
     add_melody_notes(fbRealization._segmentList, melody_parts)
@@ -123,6 +124,8 @@ if __name__ == '__main__':
     logging.log(logging.INFO, 'Started realizing.')
     # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
     file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
+    file_path = Path.cwd() / "test_pieces/test_tussennoot.musicxml"
+    time_signature = TimeSignature('4/4')
     # file_path = Path.cwd() / "test_pieces/rest_test3.musicxml"
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
@@ -132,10 +135,12 @@ if __name__ == '__main__':
     melody_parts = [p.flatten() for p in parts[:-1]]
     tups, rests = split_on_rests(basso_continuo, melody_parts)
 
+    rule_set = RuleSet(RulesConfig())
+
     full_bass = Stream()
-    full_bass.append(TimeSignature('2/4'))
+    full_bass.append(time_signature)
     full_harmonies = Stream()
-    full_harmonies.append(TimeSignature('2/4'))
+    full_harmonies.append(time_signature)
     prev_dynamic = None
     for i, (bass, melodies) in enumerate(tups):
         if i > 0:
@@ -143,7 +148,7 @@ if __name__ == '__main__':
             full_harmonies.append(rests[i - 1])
         if len(bass) == 0:
             continue
-        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic)
+        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic, rule_set)
         new_harmonies, new_bass = (p.flatten() for p in realization.parts)
         for note in new_harmonies.notes:
             full_harmonies.append(note)
