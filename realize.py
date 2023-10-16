@@ -64,6 +64,7 @@ def split_on_rests(bc, melodies):
     current_melodies = melodies
     current = bc
     rests = []
+    start_offset = 0
     while current:
         rest = None
         for i, note in enumerate(current):
@@ -75,6 +76,8 @@ def split_on_rests(bc, melodies):
             rest_start = rest.offset
             rest_length = rest.quarterLength
             rest_end = rest_start + rest_length
+            prev_start_offset = start_offset
+            start_offset = rest_end
             prev, current = current.splitAtQuarterLength(rest_start)
             _, current = current.splitAtQuarterLength(rest_length)
             current = current.notesAndRests
@@ -89,7 +92,7 @@ def split_on_rests(bc, melodies):
                 new_mels.append(curr_mel)
             current_melodies = new_mels
 
-            result.append((prev, prev_mels))
+            result.append((prev, prev_mels, prev_start_offset))
         else:
             result.append((current, current_melodies))
             current = None
@@ -97,10 +100,10 @@ def split_on_rests(bc, melodies):
     return result, rests
 
 
-def create_figured_bass(bass, melody_parts, previous_dynamic_marking, rule_set):
+def create_figured_bass(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(bass)
-    fbRealization = fbLine.realize(rule_set=rule_set)
+    fbRealization = fbLine.realize(rule_set=rule_set, start_offset=start_offset)
 
     logging.log(logging.INFO, 'Parse melody notes.')
     add_melody_notes(fbRealization._segmentList, melody_parts)
@@ -122,11 +125,11 @@ if __name__ == '__main__':
         datefmt='%H:%M:%S',
     )
     logging.log(logging.INFO, 'Started realizing.')
-    # file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
-    file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
+    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
+    # file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
     file_path = Path.cwd() / "test_pieces/test_tussennoot.musicxml"
-    time_signature = TimeSignature('4/4')
     # file_path = Path.cwd() / "test_pieces/rest_test3.musicxml"
+    time_signature = TimeSignature('4/4')
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
     basso_continuo = basso_continuo_part.flatten().notesAndRests
@@ -137,37 +140,24 @@ if __name__ == '__main__':
 
     rule_set = RuleSet(RulesConfig())
 
-    full_bass = Stream()
-    full_bass.append(time_signature)
     full_harmonies = Stream()
     full_harmonies.append(time_signature)
     prev_dynamic = None
-    for i, (bass, melodies) in enumerate(tups):
+    for i, (bass, melodies, start_offset) in enumerate(tups):
         if i > 0:
-            full_bass.append(rests[i - 1])
             full_harmonies.append(rests[i - 1])
         if len(bass) == 0:
             continue
-        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic, rule_set)
+        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic, rule_set, start_offset)
         new_harmonies, new_bass = (p.flatten() for p in realization.parts)
         for note in new_harmonies.notes:
             full_harmonies.append(note)
-        for note in new_bass.notes:
-            full_bass.append(note)
 
     s = Score(id='mainScore')
     harmonies = Part(id='part0')
-    bass = Part(id='part1')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
         harmonies.append(measure)
-    for measure in full_bass.makeMeasures(refStreamOrTimeRange=parts[0]):
-        bass.append(measure)
-    for part in parts: s.insert(0, part)
+    for part in parts[:-1]: s.insert(0, part)
     s.insert(0, harmonies)
-    s.insert(0, bass)
+    s.insert(0, parts[-1])
     s.show()
-    # full_bass.show()
-    # stream = parts.stream()
-    # stream.append(full_harmonies)
-    # stream.append(full_bass)
-    # stream.show()
