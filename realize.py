@@ -1,6 +1,8 @@
 import logging
 import sys
 from pathlib import Path
+# from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool as Pool
 
 from music21 import converter
 from music21.dynamics import Dynamic
@@ -100,7 +102,7 @@ def split_on_rests(bc, melodies):
     return result, rests
 
 
-def create_figured_bass(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
+def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(bass)
     fbRealization = fbLine.realize(rule_set=rule_set, start_offset=start_offset)
@@ -111,10 +113,10 @@ def create_figured_bass(bass, melody_parts, previous_dynamic_marking, rule_set, 
     logging.log(logging.INFO, 'Parse dynamic markings.')
     last_dynamic = add_dynamic_markings(fbRealization._segmentList, melody_parts, previous_dynamic_marking)
 
-    logging.log(logging.INFO, 'Generating optimal realization.')
-    realized = fbRealization.generate_optimal_realization()
+    return fbRealization, last_dynamic
 
-    return realized, last_dynamic
+def gen_opt(a):
+    return a.generate_optimal_realization()
 
 
 if __name__ == '__main__':
@@ -143,12 +145,22 @@ if __name__ == '__main__':
     full_harmonies = Stream()
     full_harmonies.append(time_signature)
     prev_dynamic = None
+    fbRealizations = []
     for i, (bass, melodies, start_offset) in enumerate(tups):
+        assert len(bass) > 0
+        fbRealization, prev_dynamic = prepare(bass, melodies, prev_dynamic, rule_set, start_offset)
+        fbRealizations.append(fbRealization)
+
+    realizations = []
+    for fbRealization in fbRealizations:
+        realizations.append(fbRealization.generate_optimal_realization())
+    # with Pool(5) as p:
+    #     realizations = list(p.map(gen_opt, fbRealizations))
+
+    for i, (bass, _, _) in enumerate(tups):
+        realization = realizations[i]
         if i > 0:
             full_harmonies.append(rests[i - 1])
-        if len(bass) == 0:
-            continue
-        realization, prev_dynamic = create_figured_bass(bass, melodies, prev_dynamic, rule_set, start_offset)
         new_harmonies, new_bass = (p.flatten() for p in realization.parts)
         for note in new_harmonies.notes:
             full_harmonies.append(note)
