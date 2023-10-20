@@ -1,8 +1,6 @@
 import logging
 import sys
 from pathlib import Path
-# from multiprocessing import Pool
-from multiprocessing.pool import ThreadPool as Pool
 
 from music21 import converter
 from music21.dynamics import Dynamic
@@ -96,7 +94,7 @@ def split_on_rests(bc, melodies):
 
             result.append((prev, prev_mels, prev_start_offset))
         else:
-            result.append((current, current_melodies))
+            result.append((current, current_melodies, start_offset))
             current = None
 
     return result, rests
@@ -130,6 +128,8 @@ if __name__ == '__main__':
     file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
     # file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
     file_path = Path.cwd() / "test_pieces/test_tussennoot.musicxml"
+    file_path = Path.cwd() / "test_pieces/SWV_378.musicxml"
+    # file_path = Path.cwd() / "test_pieces/test_maat.musicxml"
     # file_path = Path.cwd() / "test_pieces/rest_test3.musicxml"
     time_signature = TimeSignature('4/4')
     parts = converter.parse(file_path).parts
@@ -165,6 +165,10 @@ if __name__ == '__main__':
         for note in new_harmonies.notes:
             full_harmonies.append(note)
 
+    full_harmonies.insert(TimeSignature("3/2", offset=11*4))
+    full_harmonies.insert(TimeSignature("4/4", offset=11*4+3*6))
+    full_harmonies.insert(TimeSignature("3/2", offset=11*4+3*6+16*4))
+    full_harmonies.insert(TimeSignature("4/4", offset=11*4+3*6+16*4+12*6))
     s = Score(id='mainScore')
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
