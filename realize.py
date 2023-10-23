@@ -1,3 +1,4 @@
+import argparse
 import logging
 import sys
 from pathlib import Path
@@ -117,6 +118,24 @@ def gen_opt(a):
     return a.generate_optimal_realization()
 
 
+pieces = {
+    "ErhoreMich": {"path": "Erhore_mic_wenn_ich_rufe_Schutz.musicxml", "time_signatures": []},
+    "OboeConcerto": {"path": "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml", "time_signatures": [TimeSignature("2/4")]},
+    "SWV_378": {"path": "SWV_378.musicxml", "time_signatures": [
+        TimeSignature("3/2", offset=11*4),
+        TimeSignature("4/4", offset=11*4 + 3*6),
+        TimeSignature("3/2", offset=11*4 + 3*6 + 16*4),
+        TimeSignature("4/4", offset=11*4 + 3*6 + 16*4 + 12*6),
+    ]},
+    "test_tussennoot": {"path": "test_tussennoot.musicxml", "time_signatures": []},
+    "test_maat": {"path": "test_maat.musicxml", "time_signatures": [
+        TimeSignature("3/4", offset=2*4),
+        TimeSignature("4/4", offset=2*4 + 3*3),
+    ]},
+    "test_ignore_accidental": {"path": "test_ignore_accidental.musicxml", "time_signatures": []},
+}
+
+
 if __name__ == '__main__':
     logging.basicConfig(
         stream=sys.stdout,
@@ -124,14 +143,16 @@ if __name__ == '__main__':
         format='[%(asctime)s] %(levelname)s: %(message)s',
         datefmt='%H:%M:%S',
     )
-    logging.log(logging.INFO, 'Started realizing.')
-    file_path = Path.cwd() / "test_pieces/Erhore_mich_wenn_ich_rufe_Schutz.musicxml"
-    # file_path = Path.cwd() / "test_pieces/Oboe_Concerto_in_D_minor_Op9_No2__Tomaso_Albinoni.musicxml"
-    file_path = Path.cwd() / "test_pieces/test_tussennoot.musicxml"
-    file_path = Path.cwd() / "test_pieces/SWV_378.musicxml"
-    # file_path = Path.cwd() / "test_pieces/test_maat.musicxml"
-    # file_path = Path.cwd() / "test_pieces/rest_test3.musicxml"
-    time_signature = TimeSignature('4/4')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--piece", choices=pieces, default="test_maat")
+    args = parser.parse_args()
+    piece_name = args.piece
+    piece_file_name = pieces[piece_name]["path"]
+    piece_signatures = pieces[piece_name]["time_signatures"]
+
+    logging.log(logging.INFO, f'Started realizing {piece_name}')
+    file_path = Path.cwd() / "test_pieces" / piece_file_name
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
     basso_continuo = basso_continuo_part.flatten().notesAndRests
@@ -143,7 +164,6 @@ if __name__ == '__main__':
     rule_set = RuleSet(RulesConfig())
 
     full_harmonies = Stream()
-    full_harmonies.append(time_signature)
     prev_dynamic = None
     fbRealizations = []
     for i, (bass, melodies, start_offset) in enumerate(tups):
@@ -165,10 +185,9 @@ if __name__ == '__main__':
         for note in new_harmonies.notes:
             full_harmonies.append(note)
 
-    full_harmonies.insert(TimeSignature("3/2", offset=11*4))
-    full_harmonies.insert(TimeSignature("4/4", offset=11*4+3*6))
-    full_harmonies.insert(TimeSignature("3/2", offset=11*4+3*6+16*4))
-    full_harmonies.insert(TimeSignature("4/4", offset=11*4+3*6+16*4+12*6))
+    for time_signature in piece_signatures:
+        full_harmonies.insert(time_signature)
+
     s = Score(id='mainScore')
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
