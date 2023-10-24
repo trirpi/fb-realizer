@@ -14,7 +14,7 @@ SWV 378</work-title>
     <rights>typesetting by Oscar Smith 2019</rights>
     <encoding>
       <software>MuseScore 4.1.1</software>
-      <encoding-date>2023-10-20</encoding-date>
+      <encoding-date>2023-10-24</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="no"/>
@@ -132,9 +132,6 @@ SWV 378</work-title>
           <sign>G</sign>
           <line>2</line>
           </clef>
-        <staff-details print-object="no">
-          <staff-lines>5</staff-lines>
-          </staff-details>
         </attributes>
       <note>
         <pitch>
@@ -18888,19 +18885,19 @@ SWV 378</work-title>
           <step>F</step>
           <octave>3</octave>
           </pitch>
-        <duration>8</duration>
+        <duration>16</duration>
         <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
+        <type>whole</type>
         </note>
       <note>
         <pitch>
           <step>F</step>
           <octave>3</octave>
           </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <stem>down</stem>
         </note>
       </measure>
     <measure number="14">
@@ -19495,19 +19492,19 @@ SWV 378</work-title>
           <step>A</step>
           <octave>3</octave>
           </pitch>
-        <duration>8</duration>
+        <duration>16</duration>
         <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
+        <type>whole</type>
         </note>
       <note>
         <pitch>
           <step>A</step>
           <octave>3</octave>
           </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <stem>down</stem>
         </note>
       </measure>
     <measure number="33">
@@ -19516,10 +19513,10 @@ SWV 378</work-title>
           <step>D</step>
           <octave>4</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <tie type="start"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>down</stem>
         <notations>
           <tied type="start"/>
@@ -19534,10 +19531,10 @@ SWV 378</work-title>
           <step>D</step>
           <octave>4</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <tie type="stop"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>down</stem>
         <notations>
           <tied type="stop"/>
@@ -19552,9 +19549,10 @@ SWV 378</work-title>
           <step>E</step>
           <octave>4</octave>
           </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <stem>down</stem>
         <lyric number="1">
           <syllabic>single</syllabic>
           <text>#</text>
@@ -19671,11 +19669,10 @@ SWV 378</work-title>
           <step>D</step>
           <octave>3</octave>
           </pitch>
-        <duration>8</duration>
+        <duration>16</duration>
         <tie type="start"/>
         <voice>1</voice>
-        <type>half</type>
-        <stem>down</stem>
+        <type>whole</type>
         <notations>
           <tied type="start"/>
           </notations>
@@ -19685,10 +19682,11 @@ SWV 378</work-title>
           <step>D</step>
           <octave>3</octave>
           </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <tie type="stop"/>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <stem>down</stem>
         <notations>
           <tied type="stop"/>
           </notations>
@@ -19741,10 +19739,10 @@ SWV 378</work-title>
           <alter>-1</alter>
           <octave>3</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <tie type="start"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <accidental>flat</accidental>
         <stem>down</stem>
         <notations>
@@ -19761,10 +19759,10 @@ SWV 378</work-title>
           <alter>-1</alter>
           <octave>3</octave>
           </pitch>
-        <duration>4</duration>
+        <duration>8</duration>
         <tie type="stop"/>
         <voice>1</voice>
-        <type>quarter</type>
+        <type>half</type>
         <stem>down</stem>
         <notations>
           <tied type="stop"/>
@@ -19779,9 +19777,10 @@ SWV 378</work-title>
           <step>C</step>
           <octave>4</octave>
           </pitch>
-        <duration>16</duration>
+        <duration>8</duration>
         <voice>1</voice>
-        <type>whole</type>
+        <type>half</type>
+        <stem>down</stem>
         </note>
       </measure>
     <measure number="40">
