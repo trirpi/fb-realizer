@@ -18,4 +18,5 @@ pieces = {
     ]},
     "test_ignore_accidental": {"path": "test_ignore_accidental.musicxml", "time_signatures": []},
     "test_te_laag": {"path": "test_te_laag.musicxml", "time_signatures": []},
+    "test_inversions": {"path": "test_inversions.musicxml", "time_signatures": []},
 }
