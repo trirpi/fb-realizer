@@ -115,19 +115,21 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
 
     logging.log(logging.INFO, 'Initialize all segments.')
     past_measure = {}
-    for segment in fbRealization._segmentList:
+    for i, segment in enumerate(fbRealization._segmentList):
         segment.set_pitch_names_in_chord()
         for key, modifier in segment.fbScale.modify.items():
+            if key in past_measure and past_measure[key][1] > 8:
+                del past_measure[key]
             if (
                 key in past_measure and
                     (
-                        (past_measure[key].accidental.name == 'flat' and modifier.accidental.name == 'sharp') or
-                        (past_measure[key].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
+                        (past_measure[key][0].accidental.name == 'flat' and modifier.accidental.name == 'sharp') or
+                        (past_measure[key][0].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
                     )
             ):
-                past_measure[key] = Modifier('natural')
+                past_measure[key] = (Modifier('natural'), i)
             else:
-                past_measure[key] = modifier
+                past_measure[key] = (modifier, i)
         segment.update_pitch_names_in_chord(past_measure)
 
     for segment in fbRealization._segmentList:
