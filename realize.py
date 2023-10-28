@@ -117,8 +117,6 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     past_measure = {}
     for segment in fbRealization._segmentList:
         segment.set_pitch_names_in_chord()
-        print(segment.fbScale.modify)
-        print(segment.notation_string)
         for key, modifier in segment.fbScale.modify.items():
             if (
                 key in past_measure and
@@ -130,7 +128,6 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
                 past_measure[key] = Modifier('natural')
             else:
                 past_measure[key] = modifier
-        print(past_measure)
         segment.update_pitch_names_in_chord(past_measure)
 
     for segment in fbRealization._segmentList:
