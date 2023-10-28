@@ -1,11 +1,13 @@
 import argparse
 import logging
 import sys
+import faulthandler
 from pathlib import Path
 
 from music21 import converter
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
+from music21.improvedFiguredBass.notation import Modifier
 from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
 from music21.note import GeneralNote
 from music21.stream import Stream, Score, Part
@@ -111,13 +113,38 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     logging.log(logging.INFO, 'Parse dynamic markings.')
     last_dynamic = add_dynamic_markings(fbRealization._segmentList, melody_parts, previous_dynamic_marking)
 
+    logging.log(logging.INFO, 'Initialize all segments.')
+    past_measure = {}
+    for segment in fbRealization._segmentList:
+        segment.set_pitch_names_in_chord()
+        print(segment.fbScale.modify)
+        print(segment.notation_string)
+        for key, modifier in segment.fbScale.modify.items():
+            if (
+                key in past_measure and
+                    (
+                        (past_measure[key].accidental.name == 'flat' and modifier.accidental.name == 'sharp') or
+                        (past_measure[key].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
+                    )
+            ):
+                past_measure[key] = Modifier('natural')
+            else:
+                past_measure[key] = modifier
+        print(past_measure)
+        segment.update_pitch_names_in_chord(past_measure)
+
+    for segment in fbRealization._segmentList:
+        segment.finish_initialization()
+
     return fbRealization, last_dynamic
+
 
 def gen_opt(a):
     return a.generate_optimal_realization()
 
 
 if __name__ == '__main__':
+    faulthandler.enable()
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
