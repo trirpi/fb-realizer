@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-import faulthandler
 from pathlib import Path
 
 from music21 import converter
@@ -115,8 +114,17 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
 
     logging.log(logging.INFO, 'Initialize all segments.')
     past_measure = {}
+    past_measure_melody_notes = {}
     for i, segment in enumerate(fbRealization._segmentList):
         segment.set_pitch_names_in_chord()
+        for note in segment.melody_notes:
+            note_name = note.fullName[:1]
+            if 'sharp' in note.fullName:
+                past_measure[note_name] = (Modifier('sharp'), i)
+            elif 'flat' in note.fullName:
+                past_measure[note_name] = (Modifier('flat'), i)
+            else:
+                past_measure[note_name] = (Modifier('natural'), i)
         for key, modifier in segment.fbScale.modify.items():
             if key in past_measure and past_measure[key][1] > 8:
                 del past_measure[key]
@@ -142,30 +150,21 @@ def gen_opt(a):
     return a.generate_optimal_realization()
 
 
-if __name__ == '__main__':
-    faulthandler.enable()
-    logging.basicConfig(
-        stream=sys.stdout,
-        level=logging.INFO,
-        format='[%(asctime)s] %(levelname)s: %(message)s',
-        datefmt='%H:%M:%S',
-    )
+def realize_from_path(file_path, piece_signatures):
+    logging.log(logging.INFO, f'Started realizing {file_path}')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--piece", choices=pieces, default=default_piece)
-    args = parser.parse_args()
-    piece_name = args.piece
-    piece_file_name = pieces[piece_name]["path"]
-    piece_signatures = pieces[piece_name]["time_signatures"]
-
-    logging.log(logging.INFO, f'Started realizing {piece_name}')
-    file_path = Path.cwd() / "test_pieces" / piece_file_name
     parts = converter.parse(file_path).parts
     basso_continuo_part = parts[-1]
+
+    realized_part = realize_part(basso_continuo_part, parts[:-1], piece_signatures)
+    create_score(parts, realized_part)
+
+
+def realize_part(basso_continuo_part, parts, piece_signatures):
     basso_continuo = basso_continuo_part.flatten().notesAndRests
 
     # split fbLine on rests
-    melody_parts = [p.flatten() for p in parts[:-1]]
+    melody_parts = [p.flatten() for p in parts]
     tups, rests = split_on_rests(basso_continuo, melody_parts)
 
     rule_set = RuleSet(RulesConfig())
@@ -181,8 +180,6 @@ if __name__ == '__main__':
     realizations = []
     for fbRealization in fbRealizations:
         realizations.append(fbRealization.generate_optimal_realization())
-    # with Pool(5) as p:
-    #     realizations = list(p.map(gen_opt, fbRealizations))
 
     for i, (bass, _, _) in enumerate(tups):
         realization = realizations[i]
@@ -195,11 +192,38 @@ if __name__ == '__main__':
     for time_signature in piece_signatures:
         full_harmonies.insert(time_signature)
 
-    s = Score(id='mainScore')
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
         harmonies.append(measure)
-    for part in parts[:-1]: s.insert(0, part)
+
+    return harmonies
+
+
+def create_score(parts, harmonies):
+    s = Score(id='mainScore')
+    for part in parts[:-1]:
+        s.insert(0, part)
     s.insert(0, harmonies)
     s.insert(0, parts[-1])
     s.show()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--piece", choices=pieces, default=default_piece)
+    parser.add_argument("-l", "--logging", action=argparse.BooleanOptionalAction, default=True)
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        stream=sys.stdout,
+        level=logging.INFO if args.logging else logging.ERROR,
+        format='[%(asctime)s] %(levelname)s: %(message)s',
+        datefmt='%H:%M:%S',
+    )
+
+    piece_name = args.piece
+    piece_file_name = pieces[piece_name]["path"]
+    piece_signatures = pieces[piece_name]["time_signatures"]
+
+    file_path = Path.cwd() / "test_pieces" / piece_file_name
+    realize_from_path(file_path, piece_signatures)
