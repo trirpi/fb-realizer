@@ -9,8 +9,10 @@ from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
 from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
 from music21.note import GeneralNote
+from music21.pitch import Accidental, Pitch
 from music21.stream import Stream, Score, Part
 from config import pieces, default_piece
+
 
 def add_melody_notes(segments, melody_parts):
     """Fills in the segments melody_notes attribute."""
@@ -102,6 +104,9 @@ def split_on_rests(bc, melodies):
 
 
 def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
+    MINOR_INTERVALS = {1, 3, 8, 10}
+    MAJOR_INTERVALS = {2, 4, 9, 11}
+
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fbLine = realizer.figuredBassFromStream(bass)
     fbRealization = fbLine.realize(rule_set=rule_set, start_offset=start_offset)
@@ -114,19 +119,19 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
 
     logging.log(logging.INFO, 'Initialize all segments.')
     past_measure = {}
-    past_measure_melody_notes = {}
     for i, segment in enumerate(fbRealization._segmentList):
+        segment_measure = segment.bassNote.measureNumber
         segment.set_pitch_names_in_chord()
         for note in segment.melody_notes:
             note_name = note.fullName[:1]
             if 'sharp' in note.fullName:
-                past_measure[note_name] = (Modifier('sharp'), i)
+                past_measure[note_name] = (Modifier('sharp'), segment_measure)
             elif 'flat' in note.fullName:
-                past_measure[note_name] = (Modifier('flat'), i)
+                past_measure[note_name] = (Modifier('flat'), segment_measure)
             else:
-                past_measure[note_name] = (Modifier('natural'), i)
+                past_measure[note_name] = (Modifier('natural'), segment_measure)
         for key, modifier in segment.fbScale.modify.items():
-            if key in past_measure and past_measure[key][1] > 8:
+            if key in past_measure and past_measure[key][1] != segment_measure:
                 del past_measure[key]
             if (
                 key in past_measure and
@@ -137,17 +142,17 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
             ):
                 past_measure[key] = (Modifier('natural'), i)
             else:
-                past_measure[key] = (modifier, i)
+                if modifier.accidental.name == 'sharp' and Pitch(key).ps - segment.bassNote.pitch.ps in MAJOR_INTERVALS:
+                    modifier.accidental = Accidental('natural')
+                elif modifier.accidental.name == 'flat' and Pitch(key).ps - segment.bassNote.pitch.ps in MINOR_INTERVALS:
+                    modifier.accidental = Accidental('natural')
+                past_measure[key] = (modifier, segment_measure)
         segment.update_pitch_names_in_chord(past_measure)
 
     for segment in fbRealization._segmentList:
         segment.finish_initialization()
 
     return fbRealization, last_dynamic
-
-
-def gen_opt(a):
-    return a.generate_optimal_realization()
 
 
 def realize_from_path(file_path, piece_signatures):
@@ -179,6 +184,7 @@ def realize_part(basso_continuo_part, parts, piece_signatures):
 
     realizations = []
     for fbRealization in fbRealizations:
+        logging.log(logging.INFO, "Generating Optimal Realization.\n\n")
         realizations.append(fbRealization.generate_optimal_realization())
 
     for i, (bass, _, _) in enumerate(tups):
