@@ -178,17 +178,23 @@ def realize_part(basso_continuo_part, parts, piece_signatures):
     prev_dynamic = None
     fbRealizations = []
     for i, (bass, melodies, start_offset) in enumerate(tups):
-        assert len(bass) > 0
+        if len(bass) == 0:
+            fbRealizations.append(None)
+            continue
         fbRealization, prev_dynamic = prepare(bass, melodies, prev_dynamic, rule_set, start_offset)
         fbRealizations.append(fbRealization)
 
     realizations = []
     for fbRealization in fbRealizations:
+        if fbRealization is None:
+            continue
         logging.log(logging.INFO, "Generating Optimal Realization.\n\n")
         realizations.append(fbRealization.generate_optimal_realization())
 
     for i, (bass, _, _) in enumerate(tups):
         realization = realizations[i]
+        if realization is None:
+            continue
         if i > 0:
             full_harmonies.append(rests[i - 1])
         new_harmonies, new_bass = (p.flatten() for p in realization.parts)

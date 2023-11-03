@@ -8,7 +8,7 @@
     <creator type="composer">Composer / arranger</creator>
     <encoding>
       <software>MuseScore 4.1.1</software>
-      <encoding-date>2023-10-20</encoding-date>
+      <encoding-date>2023-11-03</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="no"/>
@@ -149,6 +149,10 @@
         <type>half</type>
         <stem>up</stem>
         <staff>2</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>2</text>
+          </lyric>
         </note>
       <note>
         <pitch>
@@ -160,6 +164,10 @@
         <type>half</type>
         <stem>down</stem>
         <staff>2</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>=</text>
+          </lyric>
         </note>
       </measure>
     <measure number="3">
