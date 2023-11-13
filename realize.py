@@ -152,6 +152,12 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     for segment in fbRealization._segmentList:
         segment.finish_initialization()
 
+    for i, segment in enumerate(fbRealization._segmentList):
+        prev_seg = fbRealization._segmentList[i-1] if i > 0 else None
+        next_seg = fbRealization._segmentList[i+1] if i < len(fbRealization._segmentList) - 1 else None
+        segment.prev_segment = prev_seg
+        segment.next_segment = next_seg
+
     return fbRealization, last_dynamic
 
 
