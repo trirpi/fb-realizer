@@ -157,6 +157,7 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
         next_seg = fbRealization._segmentList[i+1] if i < len(fbRealization._segmentList) - 1 else None
         segment.prev_segment = prev_seg
         segment.next_segment = next_seg
+        segment.on_beat = segment.play_offsets[0] + start_offset % 1 == 0
 
     return fbRealization, last_dynamic
 
