@@ -24,7 +24,8 @@ def add_melody_notes(segments, melody_parts):
             while idxs[i] < len(elts) and elts[idxs[i]].offset < start_offset:
                 idxs[i] += 1
             if not (idxs[i] < len(elts) and elts[idxs[i]].offset == start_offset):
-                if idxs[i] == 0: continue
+                if idxs[i] == 0:
+                    continue
                 idxs[i] -= 1
             melody_note: GeneralNote = elts[idxs[i]]
             if melody_note.isNote:
