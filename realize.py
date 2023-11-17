@@ -109,18 +109,18 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     MAJOR_INTERVALS = {2, 4, 9, 11}
 
     logging.log(logging.INFO, 'Parse stream to figured bass.')
-    fbLine = realizer.figuredBassFromStream(bass)
+    fbLine = realizer.figured_bass_from_stream(bass)
     fbRealization = fbLine.realize(rule_set=rule_set, start_offset=start_offset)
 
     logging.log(logging.INFO, 'Parse melody notes.')
-    add_melody_notes(fbRealization._segmentList, melody_parts)
+    add_melody_notes(fbRealization.segmentList, melody_parts)
 
     logging.log(logging.INFO, 'Parse dynamic markings.')
-    last_dynamic = add_dynamic_markings(fbRealization._segmentList, melody_parts, previous_dynamic_marking)
+    last_dynamic = add_dynamic_markings(fbRealization.segmentList, melody_parts, previous_dynamic_marking)
 
     logging.log(logging.INFO, 'Initialize all segments.')
     past_measure = {}
-    for i, segment in enumerate(fbRealization._segmentList):
+    for i, segment in enumerate(fbRealization.segmentList):
         segment_measure = segment.bassNote.measureNumber
         segment.set_pitch_names_in_chord()
         for note in segment.melody_notes:
@@ -150,12 +150,12 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
                 past_measure[key] = (modifier, segment_measure)
         segment.update_pitch_names_in_chord(past_measure)
 
-    for segment in fbRealization._segmentList:
+    for segment in fbRealization.segmentList:
         segment.finish_initialization()
 
-    for i, segment in enumerate(fbRealization._segmentList):
-        prev_seg = fbRealization._segmentList[i-1] if i > 0 else None
-        next_seg = fbRealization._segmentList[i+1] if i < len(fbRealization._segmentList) - 1 else None
+    for i, segment in enumerate(fbRealization.segmentList):
+        prev_seg = fbRealization.segmentList[i - 1] if i > 0 else None
+        next_seg = fbRealization.segmentList[i + 1] if i < len(fbRealization.segmentList) - 1 else None
         segment.prev_segment = prev_seg
         segment.next_segment = next_seg
         segment.on_beat = segment.play_offsets[0] + start_offset % 1 == 0
