@@ -9,6 +9,7 @@ from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
 from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
 from music21.improvedFiguredBass.segment import Segment
+from music21.meter import TimeSignature
 from music21.note import GeneralNote
 from music21.pitch import Accidental, Pitch
 from music21.stream import Stream, Score, Part
@@ -171,17 +172,24 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     return fb_realization, last_dynamic
 
 
-def realize_from_path(file_path, piece_signatures):
-    logging.log(logging.INFO, f'Started realizing {file_path}')
+def realize_from_path(path, start_measure, end_measure):
+    logging.log(logging.INFO, f'Started realizing {path}')
 
-    parts = converter.parse(file_path).parts
-    basso_continuo_part = parts[-1]
+    score = converter.parse(path)
+    if end_measure:
+        start_measure = start_measure or 0
+        score = score.measures(start_measure, end_measure)
 
-    realized_part = realize_part(basso_continuo_part, parts[:-1], piece_signatures)
+    parts = score.parts
+    basso_continuo_stream = parts[-1]
+
+    realized_part = realize_part(basso_continuo_stream, parts[:-1])
     create_score(parts, realized_part)
 
 
-def realize_part(basso_continuo_part, parts, piece_signatures):
+def realize_part(basso_continuo_part, parts):
+    time_signatures = basso_continuo_part.recurse().getElementsByClass(TimeSignature)
+
     basso_continuo = basso_continuo_part.flatten().notesAndRests
 
     # split fbLine on rests
@@ -217,7 +225,8 @@ def realize_part(basso_continuo_part, parts, piece_signatures):
         for note in new_harmonies.notes:
             full_harmonies.append(note)
 
-    for time_signature in piece_signatures:
+    for time_signature in time_signatures:
+        time_signature.offset = time_signature.getOffsetBySite(basso_continuo_part.recurse())
         full_harmonies.insert(time_signature)
 
     harmonies = Part(id='part0')
@@ -238,8 +247,10 @@ def create_score(parts, harmonies):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--start", type=int, help="Measure to start realizing from.", default=None)
+    parser.add_argument("-e", "--end", type=int, help="Measure to end realizing.", default=None)
     parser.add_argument("-p", "--piece", choices=pieces, default=default_piece)
-    parser.add_argument("-l", "--logging", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("-L", "--logging", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -251,7 +262,6 @@ if __name__ == '__main__':
 
     piece_name = args.piece
     piece_file_name = pieces[piece_name]["path"]
-    piece_signatures = pieces[piece_name]["time_signatures"]
 
     file_path = Path.cwd() / "test_pieces" / piece_file_name
-    realize_from_path(file_path, piece_signatures)
+    realize_from_path(file_path, start_measure=args.start, end_measure=args.end)
