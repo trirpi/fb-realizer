@@ -8,13 +8,14 @@ from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
 from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
+from music21.improvedFiguredBass.segment import Segment
 from music21.note import GeneralNote
 from music21.pitch import Accidental, Pitch
 from music21.stream import Stream, Score, Part
 from config import pieces, default_piece
 
 
-def add_melody_notes(segments, melody_parts):
+def set_melody_notes(segments, melody_parts):
     """Fills in the segments melody_notes attribute."""
     idxs = [0] * len(melody_parts)
     for segment in segments:
@@ -29,10 +30,10 @@ def add_melody_notes(segments, melody_parts):
                 idxs[i] -= 1
             melody_note: GeneralNote = elts[idxs[i]]
             if melody_note.isNote:
-                segment.melody_notes.add(elts[idxs[i]])
+                segment.melody_pitches.add(elts[idxs[i]])
 
 
-def add_dynamic_markings(segments, melody_parts, prev_dynamic=None):
+def set_dynamic_markings(segments, melody_parts, prev_dynamic=None):
     """Fills in the segments dynamic attribute."""
     if prev_dynamic is None:
         prev_dynamic = 'mf'
@@ -104,26 +105,28 @@ def split_on_rests(bc, melodies):
     return result, rests
 
 
-def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
+def set_neighboring_segments(segment_list: list[Segment]):
+    for i, segment in enumerate(segment_list):
+        prev_seg = segment_list[i - 1] if i > 0 else None
+        next_seg = segment_list[i + 1] if i < len(segment_list) - 1 else None
+        segment.prev_segment = prev_seg
+        segment.next_segment = next_seg
+
+
+def set_on_beat(segment_list, start_offset: int):
+    for i, segment in enumerate(segment_list):
+        segment.on_beat = segment.play_offsets[0] + start_offset % 1 == 0
+
+
+def handle_accidentals(segment_list):
     MINOR_INTERVALS = {1, 3, 8, 10}
     MAJOR_INTERVALS = {2, 4, 9, 11}
 
-    logging.log(logging.INFO, 'Parse stream to figured bass.')
-    fbLine = realizer.figured_bass_from_stream(bass)
-    fbRealization = fbLine.realize(rule_set=rule_set, start_offset=start_offset)
-
-    logging.log(logging.INFO, 'Parse melody notes.')
-    add_melody_notes(fbRealization.segmentList, melody_parts)
-
-    logging.log(logging.INFO, 'Parse dynamic markings.')
-    last_dynamic = add_dynamic_markings(fbRealization.segmentList, melody_parts, previous_dynamic_marking)
-
-    logging.log(logging.INFO, 'Initialize all segments.')
     past_measure = {}
-    for i, segment in enumerate(fbRealization.segmentList):
+    for i, segment in enumerate(segment_list):
         segment_measure = segment.bassNote.measureNumber
         segment.set_pitch_names_in_chord()
-        for note in segment.melody_notes:
+        for note in segment.melody_pitches:
             note_name = note.fullName[:1]
             if 'sharp' in note.fullName:
                 past_measure[note_name] = (Modifier('sharp'), segment_measure)
@@ -135,10 +138,10 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
             if key in past_measure and past_measure[key][1] != segment_measure:
                 del past_measure[key]
             if (
-                key in past_measure and
+                    key in past_measure and
                     (
-                        (past_measure[key][0].accidental.name == 'flat' and modifier.accidental.name == 'sharp') or
-                        (past_measure[key][0].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
+                            (past_measure[key][0].accidental.name == 'flat' and modifier.accidental.name == 'sharp') or
+                            (past_measure[key][0].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
                     )
             ):
                 past_measure[key] = (Modifier('natural'), i)
@@ -150,17 +153,22 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
                 past_measure[key] = (modifier, segment_measure)
         segment.update_pitch_names_in_chord(past_measure)
 
-    for segment in fbRealization.segmentList:
+    for segment in segment_list:
         segment.finish_initialization()
 
-    for i, segment in enumerate(fbRealization.segmentList):
-        prev_seg = fbRealization.segmentList[i - 1] if i > 0 else None
-        next_seg = fbRealization.segmentList[i + 1] if i < len(fbRealization.segmentList) - 1 else None
-        segment.prev_segment = prev_seg
-        segment.next_segment = next_seg
-        segment.on_beat = segment.play_offsets[0] + start_offset % 1 == 0
 
-    return fbRealization, last_dynamic
+def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
+    logging.log(logging.INFO, 'Parse stream to figured bass.')
+    fb_line = realizer.figured_bass_from_stream(bass)
+    fb_realization = fb_line.realize(rule_set=rule_set, start_offset=start_offset)
+
+    set_neighboring_segments(fb_realization.segment_list)
+    set_melody_notes(fb_realization.segment_list, melody_parts)
+    last_dynamic = set_dynamic_markings(fb_realization.segment_list, melody_parts, previous_dynamic_marking)
+    handle_accidentals(fb_realization.segment_list)
+    set_on_beat(fb_realization.segment_list, start_offset)
+
+    return fb_realization, last_dynamic
 
 
 def realize_from_path(file_path, piece_signatures):
