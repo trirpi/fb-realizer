@@ -73,7 +73,7 @@ def split_on_rests(bc, melodies):
     start_offset = 0
     while current:
         rest = None
-        for i, note in enumerate(current):
+        for i, note in enumerate(current.notesAndRests):
             if note.isRest:
                 rest = current[i]
                 break
@@ -188,9 +188,7 @@ def realize_from_path(path, start_measure, end_measure):
 
 
 def realize_part(basso_continuo_part, parts):
-    time_signatures = basso_continuo_part.recurse().getElementsByClass(TimeSignature)
-
-    basso_continuo = basso_continuo_part.flatten().notesAndRests
+    basso_continuo = basso_continuo_part.flatten()
 
     # split fbLine on rests
     melody_parts = [p.flatten() for p in parts]
@@ -225,9 +223,13 @@ def realize_part(basso_continuo_part, parts):
         for note in new_harmonies.notes:
             full_harmonies.append(note)
 
+    # reconstruct proper formatting
+    time_signatures = basso_continuo_part.recurse().getElementsByClass(TimeSignature)
     for time_signature in time_signatures:
         time_signature.offset = time_signature.getOffsetBySite(basso_continuo_part.recurse())
         full_harmonies.insert(time_signature)
+
+    full_harmonies.insert(basso_continuo_part.keySignature)
 
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
