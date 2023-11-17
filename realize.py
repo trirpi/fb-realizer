@@ -7,7 +7,7 @@ from music21 import converter
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
-from music21.improvedFiguredBass.rules import RuleSet, RulesConfig
+from music21.improvedFiguredBass.rules import RuleSet
 from music21.improvedFiguredBass.segment import Segment
 from music21.meter import TimeSignature
 from music21.note import GeneralNote
@@ -196,7 +196,7 @@ def realize_part(basso_continuo_part, parts):
     melody_parts = [p.flatten() for p in parts]
     tups, rests = split_on_rests(basso_continuo, melody_parts)
 
-    rule_set = RuleSet(RulesConfig())
+    rule_set = RuleSet()
 
     full_harmonies = Stream()
     prev_dynamic = None
