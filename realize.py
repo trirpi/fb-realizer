@@ -75,7 +75,7 @@ def split_on_rests(bc, melodies):
         rest = None
         for i, note in enumerate(current.notesAndRests):
             if note.isRest:
-                rest = current[i]
+                rest = current.notesAndRests[i]
                 break
         if rest:
             rests.append(rest)
@@ -229,7 +229,8 @@ def realize_part(basso_continuo_part, parts):
         time_signature.offset = time_signature.getOffsetBySite(basso_continuo_part.recurse())
         full_harmonies.insert(time_signature)
 
-    full_harmonies.insert(basso_continuo_part.keySignature)
+    if basso_continuo_part.keySignature:
+        full_harmonies.insert(basso_continuo_part.keySignature)
 
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
