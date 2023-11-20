@@ -7,6 +7,7 @@ from music21 import converter
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
+from music21.improvedFiguredBass.realizer import FiguredBassLineException
 from music21.improvedFiguredBass.rules import RuleSet
 from music21.improvedFiguredBass.segment import Segment
 from music21.meter import TimeSignature
@@ -177,6 +178,8 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
 
 
 def realize_from_path(path, start_measure, end_measure):
+    if start_measure and not end_measure:
+        raise FiguredBassLineException("Cannot only input starting measure.")
     logging.log(logging.INFO, f'Started realizing {path}')
 
     score = converter.parse(path)
