@@ -22,11 +22,13 @@ def test_realization():
     piece_name = default_piece
     piece_file_name = pieces[piece_name]['path']
 
-    file_path = Path.cwd().parent / 'test_pieces' / piece_file_name
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / piece_file_name
     realize_from_path(file_path, start_measure=None, end_measure=None)
 
 
 def test_realizations():
     for piece_name, args in pieces.items():
-        file_path = Path.cwd().parent / 'test_pieces' / args['path']
+        current_file_dir = Path(__file__).resolve().parent
+        file_path = current_file_dir.parent / 'test_pieces' / args['path']
         realize_from_path(file_path, start_measure=0, end_measure=2)
