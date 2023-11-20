@@ -125,7 +125,7 @@ def handle_accidentals(segment_list):
 
     past_measure = {}
     for i, segment in enumerate(segment_list):
-        segment_measure = segment.bassNote.measureNumber
+        segment_measure = segment.bassNote.measureNumber or 0
         segment.set_pitch_names_in_chord()
         for note in segment.melody_pitches:
             note_name = note.fullName[:1]
@@ -135,8 +135,12 @@ def handle_accidentals(segment_list):
                 past_measure[note_name] = (Modifier('flat'), segment_measure)
             else:
                 past_measure[note_name] = (Modifier('natural'), segment_measure)
+        for note in list(past_measure.keys()):
+            if past_measure[note][1] < segment_measure-1:
+                del past_measure[note]
+
         for key, modifier in segment.fbScale.modify.items():
-            if key in past_measure and past_measure[key][1] != segment_measure:
+            if key in past_measure and past_measure[key][1] < segment_measure-1:
                 del past_measure[key]
             if (
                     key in past_measure and
@@ -145,7 +149,7 @@ def handle_accidentals(segment_list):
                             (past_measure[key][0].accidental.name == 'sharp' and modifier.accidental.name == 'flat')
                     )
             ):
-                past_measure[key] = (Modifier('natural'), i)
+                past_measure[key] = (Modifier('natural'), segment_measure)
             else:
                 if modifier.accidental.name == 'sharp' and Pitch(key).ps - segment.bassNote.pitch.ps in MAJOR_INTERVALS:
                     modifier.accidental = Accidental('natural')
@@ -229,8 +233,8 @@ def realize_part(basso_continuo_part, parts):
         time_signature.offset = time_signature.getOffsetBySite(basso_continuo_part.recurse())
         full_harmonies.insert(time_signature)
 
-    if basso_continuo_part.keySignature:
-        full_harmonies.insert(basso_continuo_part.keySignature)
+    if basso_continuo.keySignature:
+        full_harmonies.insert(basso_continuo.keySignature)
 
     harmonies = Part(id='part0')
     for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
@@ -267,4 +271,4 @@ if __name__ == '__main__':
     piece_file_name = pieces[piece_name]["path"]
 
     file_path = Path.cwd() / "test_pieces" / piece_file_name
-    realize_from_path(file_path, start_measure=args.start, end_measure=args.end)
+    realize_from_path(file_path, start_measure=args.start, end_measure=args.end).show()
