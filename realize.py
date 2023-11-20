@@ -115,9 +115,12 @@ def set_neighboring_segments(segment_list: list[Segment]):
         segment.next_segment = next_seg
 
 
-def set_on_beat(segment_list, start_offset: int):
+def set_on_beat(segment_list, time_signature, start_offset: int):
     for i, segment in enumerate(segment_list):
-        segment.on_beat = segment.play_offsets[0] + start_offset % 1 == 0
+        offset = segment.play_offsets[0] + start_offset
+        segment.on_beat = 0
+        segment.on_beat += offset % 1 == 0
+        segment.on_beat += offset % time_signature.beatDivisionCount == 0
 
 
 def handle_accidentals(segment_list):
@@ -137,11 +140,11 @@ def handle_accidentals(segment_list):
             else:
                 past_measure[note_name] = (Modifier('natural'), segment_measure)
         for note in list(past_measure.keys()):
-            if past_measure[note][1] < segment_measure-1:
+            if past_measure[note][1] < segment_measure - 1:
                 del past_measure[note]
 
         for key, modifier in segment.fbScale.modify.items():
-            if key in past_measure and past_measure[key][1] < segment_measure-1:
+            if key in past_measure and past_measure[key][1] < segment_measure - 1:
                 del past_measure[key]
             if (
                     key in past_measure and
@@ -154,7 +157,8 @@ def handle_accidentals(segment_list):
             else:
                 if modifier.accidental.name == 'sharp' and Pitch(key).ps - segment.bassNote.pitch.ps in MAJOR_INTERVALS:
                     modifier.accidental = Accidental('natural')
-                elif modifier.accidental.name == 'flat' and Pitch(key).ps - segment.bassNote.pitch.ps in MINOR_INTERVALS:
+                elif modifier.accidental.name == 'flat' and Pitch(
+                        key).ps - segment.bassNote.pitch.ps in MINOR_INTERVALS:
                     modifier.accidental = Accidental('natural')
                 past_measure[key] = (modifier, segment_measure)
         segment.update_pitch_names_in_chord(past_measure)
@@ -163,7 +167,7 @@ def handle_accidentals(segment_list):
         segment.finish_initialization()
 
 
-def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset=0):
+def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset, time_signature):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fb_line = realizer.figured_bass_from_stream(bass)
     fb_realization = fb_line.realize(rule_set=rule_set, start_offset=start_offset)
@@ -172,7 +176,7 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     set_melody_notes(fb_realization.segment_list, melody_parts)
     last_dynamic = set_dynamic_markings(fb_realization.segment_list, melody_parts, previous_dynamic_marking)
     handle_accidentals(fb_realization.segment_list)
-    set_on_beat(fb_realization.segment_list, start_offset)
+    set_on_beat(fb_realization.segment_list, time_signature, start_offset)
 
     return fb_realization, last_dynamic
 
@@ -196,6 +200,7 @@ def realize_from_path(path, start_measure, end_measure):
 
 def realize_part(basso_continuo_part, parts):
     basso_continuo = basso_continuo_part.flatten()
+    time_signature = basso_continuo.timeSignature
 
     # split fbLine on rests
     melody_parts = [p.flatten() for p in parts]
@@ -210,7 +215,7 @@ def realize_part(basso_continuo_part, parts):
         if bass.quarterLength == 0:
             fbRealizations.append(None)
             continue
-        fbRealization, prev_dynamic = prepare(bass, melodies, prev_dynamic, rule_set, start_offset)
+        fbRealization, prev_dynamic = prepare(bass, melodies, prev_dynamic, rule_set, start_offset, time_signature)
         fbRealizations.append(fbRealization)
 
     realizations = []
