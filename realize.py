@@ -204,7 +204,7 @@ def realize_part(basso_continuo_part, parts):
     prev_dynamic = None
     fbRealizations = []
     for i, (bass, melodies, start_offset) in enumerate(tups):
-        if len(bass) == 0:
+        if bass.quarterLength == 0:
             fbRealizations.append(None)
             continue
         fbRealization, prev_dynamic = prepare(bass, melodies, prev_dynamic, rule_set, start_offset)
@@ -213,6 +213,7 @@ def realize_part(basso_continuo_part, parts):
     realizations = []
     for fbRealization in fbRealizations:
         if fbRealization is None:
+            realizations.append(None)
             continue
         logging.log(logging.INFO, "Generating Optimal Realization.\n\n")
         realizations.append(fbRealization.generate_optimal_realization())

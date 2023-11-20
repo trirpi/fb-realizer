@@ -10,6 +10,6 @@ pieces = {
     "test_te_laag": {"path": "test_te_laag.musicxml"},
     "test_inversions": {"path": "test_inversions.musicxml"},
     "test_accidentals": {"path": "test_accidentals.mxl"},
-    # "JPassion": {"path": "BWV_245_passion.musicxml"},
+    "JPassion": {"path": "BWV_245_passion.musicxml"},
     "TrioCouperin": {"path": "Couperin_Trio_Sonata.musicxml"},
 }
