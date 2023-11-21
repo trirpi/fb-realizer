@@ -198,18 +198,20 @@ def realize_from_path(path, start_measure, end_measure):
     return create_score(parts, realized_part)
 
 
-def set_is_tonic(bass_part, score):
+def set_key(bass_part, score):
     wa = analysis.windowed.WindowedAnalysis(score, analysis.discrete.KrumhanslKessler())
     a, b = wa.analyze(windowSize=8)
     for note in bass_part.flatten().notes:
-        note.is_tonic = note.offset >= 8 and a[int(note.offset - 8)][0].ps % 12 == note.pitch.ps % 12
+        window_left = max(0, int(note.offset) - 8 + min(int(note.duration.quarterLength), 4))
+        note.key_pitch_class = a[window_left][0].ps % 12
+        note.key_name = a[max(int(note.offset - 8), 0)][0].name
 
 
 def realize_part(basso_continuo_part, score):
     basso_continuo = basso_continuo_part.flatten()
     time_signature = basso_continuo.timeSignature
 
-    set_is_tonic(basso_continuo, score)
+    set_key(basso_continuo, score)
 
     # split fbLine on rests
     melody_parts = [p.flatten() for p in score.parts[:-1]]
