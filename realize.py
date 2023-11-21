@@ -3,7 +3,7 @@ import logging
 import sys
 from pathlib import Path
 
-from music21 import converter
+from music21 import converter, analysis
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
@@ -194,16 +194,25 @@ def realize_from_path(path, start_measure, end_measure):
     parts = score.parts
     basso_continuo_stream = parts[-1]
 
-    realized_part = realize_part(basso_continuo_stream, parts[:-1])
+    realized_part = realize_part(basso_continuo_stream, score)
     return create_score(parts, realized_part)
 
 
-def realize_part(basso_continuo_part, parts):
+def set_is_tonic(bass_part, score):
+    wa = analysis.windowed.WindowedAnalysis(score, analysis.discrete.KrumhanslKessler())
+    a, b = wa.analyze(windowSize=8)
+    for note in bass_part.flatten().notes:
+        note.is_tonic = note.offset >= 8 and a[int(note.offset - 8)][0].ps % 12 == note.pitch.ps % 12
+
+
+def realize_part(basso_continuo_part, score):
     basso_continuo = basso_continuo_part.flatten()
     time_signature = basso_continuo.timeSignature
 
+    set_is_tonic(basso_continuo, score)
+
     # split fbLine on rests
-    melody_parts = [p.flatten() for p in parts]
+    melody_parts = [p.flatten() for p in score.parts[:-1]]
     tups, rests = split_on_rests(basso_continuo, melody_parts)
 
     rule_set = RuleSet()
@@ -246,7 +255,7 @@ def realize_part(basso_continuo_part, parts):
         full_harmonies.insert(basso_continuo.keySignature)
 
     harmonies = Part(id='part0')
-    for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=parts[0]):
+    for measure in full_harmonies.makeMeasures(refStreamOrTimeRange=score.parts[0]):
         harmonies.append(measure)
 
     return harmonies
