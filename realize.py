@@ -200,9 +200,9 @@ def realize_from_path(path, start_measure, end_measure):
 
 def set_key(bass_part, score):
     wa = analysis.windowed.WindowedAnalysis(score, analysis.discrete.KrumhanslKessler())
-    a, b = wa.analyze(windowSize=8)
+    a, b = wa.analyze(windowSize=min(8, int(bass_part.highestTime)))
     for note in bass_part.flatten().notes:
-        window_left = max(0, int(note.offset) - 8 + min(int(note.duration.quarterLength), 4))
+        window_left = min(max(0, int(note.offset) - 8 + min(int(note.duration.quarterLength), 4)), len(a)-1)
         note.key_pitch_class = a[window_left][0].ps % 12
         note.key_name = a[max(int(note.offset - 8), 0)][0].name
 

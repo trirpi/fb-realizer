@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from realize import realize_from_path
 from config import pieces, default_piece
 from music21.improvedFiguredBass.segment import Segment
@@ -27,8 +29,8 @@ def test_realization():
     realize_from_path(file_path, start_measure=None, end_measure=None)
 
 
-def test_realizations():
-    for piece_name, args in pieces.items():
-        current_file_dir = Path(__file__).resolve().parent
-        file_path = current_file_dir.parent / 'test_pieces' / args['path']
-        realize_from_path(file_path, start_measure=0, end_measure=2)
+@pytest.mark.parametrize("piece_name, args", pieces.items())
+def test_realizations(piece_name, args):
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / args['path']
+    realize_from_path(file_path, start_measure=0, end_measure=2)
