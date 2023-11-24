@@ -16,8 +16,8 @@ def test_segment():
     assert hasattr(s, 'next_segment')
     assert hasattr(s, 'prev_segment')
     assert hasattr(s, 'notation_string')
-    assert len(s.pitchNamesInChord) == 1
-    assert tuple(s.pitchNamesInChord[0]) == ('D', 'G', 'B')
+    assert len(s.pitch_names_in_chord) == 1
+    assert tuple(s.pitch_names_in_chord[0]) == ('D', 'G', 'B')
 
 
 def test_realization():
