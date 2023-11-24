@@ -8,7 +8,7 @@
     <creator type="composer">Composer / arranger</creator>
     <encoding>
       <software>MuseScore 4.1.1</software>
-      <encoding-date>2023-10-24</encoding-date>
+      <encoding-date>2023-11-24</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="no"/>
@@ -227,14 +227,24 @@
         </note>
       <note>
         <pitch>
-          <step>A</step>
+          <step>G</step>
+          <alter>1</alter>
           <octave>2</octave>
           </pitch>
         <duration>1</duration>
         <voice>5</voice>
         <type>quarter</type>
+        <accidental>sharp</accidental>
         <stem>up</stem>
         <staff>2</staff>
+        <lyric number="1">
+          <syllabic>single</syllabic>
+          <text>6+</text>
+          </lyric>
+        <lyric number="2">
+          <syllabic>single</syllabic>
+          <text>4+</text>
+          </lyric>
         </note>
       <note>
         <rest/>
