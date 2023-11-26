@@ -4,7 +4,7 @@ import pytest
 
 from realize import realize_from_path
 from config import pieces, default_piece
-from music21.improvedFiguredBass.segment import Segment
+from music21.improvedFiguredBass.segment import Segment, SegmentOption
 
 
 def test_segment():
@@ -12,12 +12,17 @@ def test_segment():
     s.set_pitch_names_in_chord()
     s.finish_initialization()
     assert hasattr(s, 'dynamic')
-    assert hasattr(s, 'notation_string')
     assert hasattr(s, 'next_segment')
     assert hasattr(s, 'prev_segment')
-    assert hasattr(s, 'notation_string')
-    assert len(s.pitch_names_in_chord) == 1
-    assert tuple(s.pitch_names_in_chord[0]) == ('D', 'G', 'B')
+    assert len(s.segment_options) == 1
+
+
+def test_segment_options():
+    s = Segment('D', '6,4')
+    s.set_pitch_names_in_chord()
+    s.finish_initialization()
+    segment_option: SegmentOption = s.segment_options[0]
+    assert tuple(segment_option.pitch_names_in_chord) == ('D', 'G', 'B')
 
 
 def test_realization():
