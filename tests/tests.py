@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from music21.improvedFiguredBass.rules import ParallelFifths, HiddenFifth
 from music21.pitch import Pitch
 from realize import realize_from_path
 from config import pieces, default_piece
@@ -35,18 +36,56 @@ def test_segment(segment):
 
 
 def test_intermediate_note(segment, possibility):
-    intermediate_notes = segment.get_intermediate_notes(possibility)
+    intermediate_notes = segment.get_intermediate_int_pitches(possibility)
     assert len(intermediate_notes) == 6
     pitch, voice = intermediate_notes[0]
     assert voice == 0
-    assert pitch == Pitch('E3')
+    assert pitch == Pitch('E3').ps
     pitch, voice = intermediate_notes[1]
     assert voice == 0
-    assert pitch == Pitch('C3')
+    assert pitch == Pitch('C3').ps
     pitch, voice = intermediate_notes[5]
     assert voice == 2
-    assert pitch == Pitch('A3')
+    assert pitch == Pitch('A3').ps
 
+
+def test_parallel_fifth_rule():
+    _ = None
+    pf = ParallelFifths(cost=1)
+
+    p1 = Possibility((Pitch('G4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A4'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 1
+    p1 = Possibility((Pitch('G4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A5'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 1
+    p1 = Possibility((Pitch('G4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A4'), Pitch('D3')))
+    assert pf.get_cost(p1, p2, _, _) == 1
+    p1 = Possibility((Pitch('G4'), Pitch('C#4')))
+    p2 = Possibility((Pitch('A4'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 0
+    p1 = Possibility((Pitch('G4'), Pitch('C4')))
+    p2 = Possibility((Pitch('Ab4'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 0
+
+
+def test_hidden_fifth_rule():
+    _ = None
+    pf = HiddenFifth(cost=1)
+
+    p1 = Possibility((Pitch('F4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A4'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 1
+    p1 = Possibility((Pitch('F4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A5'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 1
+    p1 = Possibility((Pitch('F4'), Pitch('C4')))
+    p2 = Possibility((Pitch('A4'), Pitch('D3')))
+    assert pf.get_cost(p1, p2, _, _) == 0
+    p1 = Possibility((Pitch('F4'), Pitch('C4')))
+    p2 = Possibility((Pitch('Ab4'), Pitch('D4')))
+    assert pf.get_cost(p1, p2, _, _) == 0
 
 def test_segment_options(segment_option):
     assert tuple(segment_option.pitch_names_in_chord) == ('D', 'G', 'B')
