@@ -52,9 +52,6 @@ def test_segment_options(segment_option):
     assert tuple(segment_option.pitch_names_in_chord) == ('D', 'G', 'B')
 
 
-
-
-
 def test_realization():
     piece_name = default_piece
     piece_file_name = pieces[piece_name]['path']
