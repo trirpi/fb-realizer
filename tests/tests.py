@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from music21.improvedFiguredBass.rules import ParallelFifths, HiddenFifth
+from music21.improvedFiguredBass.rules import ParallelFifths, HiddenFifth, AvoidDoubling
 from music21.pitch import Pitch
 from realize import realize_from_path
 from config import pieces, default_piece
@@ -87,8 +87,16 @@ def test_hidden_fifth_rule():
     p2 = Possibility((Pitch('Ab4'), Pitch('D4')))
     assert pf.get_cost(p1, p2, _, _) == 0
 
+
 def test_segment_options(segment_option):
     assert tuple(segment_option.pitch_names_in_chord) == ('D', 'G', 'B')
+
+
+def test_avoid_doubling(segment):
+    ad = AvoidDoubling(cost=1)
+    assert ad.get_cost(Possibility((1,2,3)), segment) == 0
+    assert ad.get_cost(Possibility((1,2,2)), segment) == 1
+    assert ad.get_cost(Possibility((1,2,14)), segment) == 1
 
 
 def test_realization():
