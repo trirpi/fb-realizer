@@ -14,4 +14,4 @@ pieces = {
     "TrioCouperin": {"path": "Couperin_Trio_Sonata.musicxml"},
 }
 
-interactively_ask_cadence = True
+interactively_ask_cadence = False
