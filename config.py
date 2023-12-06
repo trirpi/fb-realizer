@@ -13,3 +13,5 @@ pieces = {
     "JPassion": {"path": "BWV_245_passion.musicxml"},
     "TrioCouperin": {"path": "Couperin_Trio_Sonata.musicxml"},
 }
+
+interactively_ask_cadence = True

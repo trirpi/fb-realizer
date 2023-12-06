@@ -14,7 +14,8 @@ from music21.meter import TimeSignature
 from music21.note import GeneralNote
 from music21.pitch import Accidental, Pitch
 from music21.stream import Stream, Score, Part
-from config import pieces, default_piece
+
+import config
 
 
 def set_melody_notes(segments, melody_parts):
@@ -177,6 +178,7 @@ def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset
     last_dynamic = set_dynamic_markings(fb_realization.segment_list, melody_parts, previous_dynamic_marking)
     handle_accidentals(fb_realization.segment_list)
     set_on_beat(fb_realization.segment_list, time_signature, start_offset)
+    set_ends_cadence(fb_realization.segment_list)
 
     return fb_realization, last_dynamic
 
@@ -206,6 +208,17 @@ def set_key(bass_part, score):
         window_left = min(max(0, int(note.offset) - window_size + min(int(note.duration.quarterLength), 4)), len(a)-1)
         note.key_pitch_class = a[window_left][0].ps % 12
         note.key_name = a[window_left][0].name
+
+
+def set_ends_cadence(segment_list: list[Segment]):
+    for i, segment in enumerate(segment_list[1:]):
+        if int(segment.prev_segment.bassNote.pitch.ps) % 12 == (segment.bassNote.pitch.ps + 7) % 12:
+            if config.interactively_ask_cadence:
+                print(f"Is this a cadence? {segment.prev_segment} -> {segment} (y/n)")
+                if input().lower().strip() != 'y':
+                    continue
+            logging.info(f"Cadence found at segment {i}")
+            segment.ends_cadence = True
 
 
 def realize_part(basso_continuo_part, score):
@@ -277,7 +290,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--start", type=int, help="Measure to start realizing from.", default=None)
     parser.add_argument("-e", "--end", type=int, help="Measure to end realizing.", default=None)
-    parser.add_argument("-p", "--piece", choices=pieces, default=default_piece)
+    parser.add_argument("-p", "--piece", choices=config.pieces, default=config.default_piece)
     parser.add_argument("-L", "--logging", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
 
@@ -289,7 +302,7 @@ if __name__ == '__main__':
     )
 
     piece_name = args.piece
-    piece_file_name = pieces[piece_name]["path"]
+    piece_file_name = config.pieces[piece_name]["path"]
 
     file_path = Path.cwd() / "test_pieces" / piece_file_name
     realize_from_path(file_path, start_measure=args.start, end_measure=args.end).show()
