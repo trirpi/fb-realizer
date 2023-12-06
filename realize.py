@@ -130,7 +130,7 @@ def handle_accidentals(segment_list):
 
     past_measure = {}
     for i, segment in enumerate(segment_list):
-        segment_measure = segment.bassNote.measureNumber or 0
+        segment_measure = segment.bassNote.measureNumber
         segment.set_pitch_names_in_chord()
         for note in segment.melody_pitches:
             note_name = note.fullName[:1]
