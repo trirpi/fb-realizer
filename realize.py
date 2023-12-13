@@ -24,16 +24,15 @@ def set_melody_notes(segments, melody_parts):
     for segment in segments:
         start_offset = segment.play_offsets[0]
         for i, part in enumerate(melody_parts):
-            elts = part.notesAndRests
+            elts = part.flat.notes
             while idxs[i] < len(elts) and elts[idxs[i]].offset < start_offset:
                 idxs[i] += 1
             if not (idxs[i] < len(elts) and elts[idxs[i]].offset == start_offset):
                 if idxs[i] == 0:
                     continue
                 idxs[i] -= 1
-            melody_note: GeneralNote = elts[idxs[i]]
-            if melody_note.isNote:
-                segment.melody_pitches.add(elts[idxs[i]])
+            melody_pitch: Pitch = elts[idxs[i]].pitch
+            segment.melody_pitches.add(melody_pitch)
 
 
 def set_dynamic_markings(segments, melody_parts, prev_dynamic=None):
@@ -168,7 +167,14 @@ def handle_accidentals(segment_list):
         segment.finish_initialization()
 
 
-def prepare(bass, melody_parts, previous_dynamic_marking, rule_set, start_offset, time_signature):
+def prepare(
+        bass,
+        melody_parts,
+        previous_dynamic_marking=None,
+        rule_set=RuleSet(),
+        start_offset=0,
+        time_signature=TimeSignature()
+):
     logging.log(logging.INFO, 'Parse stream to figured bass.')
     fb_line = realizer.figured_bass_from_stream(bass)
     fb_realization = fb_line.realize(rule_set=rule_set, start_offset=start_offset)

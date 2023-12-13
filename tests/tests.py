@@ -2,9 +2,11 @@ from pathlib import Path
 
 import pytest
 
+import realize
+from music21 import converter
 from music21.improvedFiguredBass.rules import ParallelFifths, HiddenFifth, AvoidDoubling
 from music21.pitch import Pitch
-from realize import realize_from_path
+from realize import realize_from_path, realize_part
 from config import pieces, default_piece
 from music21.improvedFiguredBass.segment import Segment, SegmentOption
 from music21.improvedFiguredBass.possibility import Possibility
@@ -97,6 +99,25 @@ def test_avoid_doubling(segment):
     assert ad.get_cost(Possibility((1,2,3)), segment) == 0
     assert ad.get_cost(Possibility((1,2,2)), segment) == 1
     assert ad.get_cost(Possibility((1,2,14)), segment) == 1
+
+
+def test_melody_notes(segment):
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / 'test_melody_notes.musicxml'
+
+    score = converter.parse(file_path)
+    bc_part = score.parts[-1]
+    melody_parts = score.parts[:-1]
+
+    realization, _ = realize.prepare(bc_part, melody_parts)
+
+    melody_pitches_first = list(realization.segment_list[0].melody_pitches)
+    assert len(melody_pitches_first) == 1
+    assert melody_pitches_first[0] == Pitch("E4")
+
+    melody_pitches_second = list(realization.segment_list[1].melody_pitches)
+    assert len(melody_pitches_second) == 1
+    assert melody_pitches_second[0] == Pitch("A4")
 
 
 def test_realization():
