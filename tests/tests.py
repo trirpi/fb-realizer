@@ -12,6 +12,18 @@ from music21.improvedFiguredBass.segment import Segment, SegmentOption
 from music21.improvedFiguredBass.possibility import Possibility
 
 
+def get_realization(file_name):
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / file_name
+
+    score = converter.parse(file_path)
+    bc_part = score.parts[-1]
+    melody_parts = score.parts[:-1]
+
+    realization, _ = realize.prepare(bc_part, melody_parts)
+    return realization
+
+
 @pytest.fixture
 def segment() -> Segment:
     s = Segment('D3', '6,4')
@@ -101,23 +113,31 @@ def test_avoid_doubling(segment):
     assert ad.get_cost(Possibility((1,2,14)), segment) == 1
 
 
-def test_melody_notes(segment):
-    current_file_dir = Path(__file__).resolve().parent
-    file_path = current_file_dir.parent / 'test_pieces' / 'test_melody_notes.musicxml'
+def test_melody_notes_at_strike(segment):
+    realization = get_realization('test_melody_notes.musicxml')
 
-    score = converter.parse(file_path)
-    bc_part = score.parts[-1]
-    melody_parts = score.parts[:-1]
-
-    realization, _ = realize.prepare(bc_part, melody_parts)
-
-    melody_pitches_first = list(realization.segment_list[0].melody_pitches)
+    melody_pitches_first = list(realization.segment_list[0].melody_pitches_at_strike)
     assert len(melody_pitches_first) == 1
     assert melody_pitches_first[0] == Pitch("E4")
 
-    melody_pitches_second = list(realization.segment_list[1].melody_pitches)
+    melody_pitches_second = list(realization.segment_list[1].melody_pitches_at_strike)
     assert len(melody_pitches_second) == 1
     assert melody_pitches_second[0] == Pitch("A4")
+
+
+def test_melody_notes(segment):
+    realization = get_realization('test_melody_notes.musicxml')
+    melody_pitches_first = realization.segment_list[0].melody_pitches
+    assert len(melody_pitches_first) == 4
+    assert Pitch("E4") in melody_pitches_first
+    assert Pitch("F4") in melody_pitches_first
+    assert Pitch("G4") in melody_pitches_first
+    assert Pitch("A4") in melody_pitches_first
+    melody_pitches_second = realization.segment_list[1].melody_pitches
+    assert len(melody_pitches_second) == 3
+    assert Pitch("A4") in melody_pitches_second
+    assert Pitch("C5") in melody_pitches_second
+    assert Pitch("E5") in melody_pitches_second
 
 
 def test_realization():

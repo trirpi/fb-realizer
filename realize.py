@@ -11,15 +11,14 @@ from music21.improvedFiguredBass.realizer import FiguredBassLineException
 from music21.improvedFiguredBass.rules import RuleSet
 from music21.improvedFiguredBass.segment import Segment
 from music21.meter import TimeSignature
-from music21.note import GeneralNote
 from music21.pitch import Accidental, Pitch
 from music21.stream import Stream, Score, Part
 
 import config
 
 
-def set_melody_notes(segments, melody_parts):
-    """Fills in the segments melody_notes attribute."""
+def set_melody_pitches_at_strike(segments, melody_parts):
+    """Fills in the segments melody_pitches attribute with pitches being played at time of strike."""
     idxs = [0] * len(melody_parts)
     for segment in segments:
         start_offset = segment.play_offsets[0]
@@ -32,7 +31,30 @@ def set_melody_notes(segments, melody_parts):
                     continue
                 idxs[i] -= 1
             melody_pitch: Pitch = elts[idxs[i]].pitch
+            segment.melody_pitches_at_strike.add(melody_pitch)
+
+
+def set_melody_pitches(segments, melody_parts):
+    """
+    Fills in the segments melody_pitches attribute with pitches being played at time of strike and duration of strike.
+    """
+    for melody_part in melody_parts:
+        extend_melody_pitches(segments, melody_part)
+
+
+def extend_melody_pitches(segments, melody_part):
+    i = 0
+    for segment in segments:
+        start_offset = segment.play_offsets[0]
+        end_offset = segment.play_offsets[1]
+        notes = melody_part.flat.notes
+
+        while i < len(notes) and notes[i].offset + notes[i].duration.quarterLength <= start_offset:
+            i += 1
+        while i < len(notes) and notes[i].offset < end_offset:
+            melody_pitch = notes[i].pitch
             segment.melody_pitches.add(melody_pitch)
+            i += 1
 
 
 def set_dynamic_markings(segments, melody_parts, prev_dynamic=None):
@@ -180,7 +202,8 @@ def prepare(
     fb_realization = fb_line.realize(rule_set=rule_set, start_offset=start_offset)
 
     set_neighboring_segments(fb_realization.segment_list)
-    set_melody_notes(fb_realization.segment_list, melody_parts)
+    set_melody_pitches(fb_realization.segment_list, melody_parts)
+    set_melody_pitches_at_strike(fb_realization.segment_list, melody_parts)
     last_dynamic = set_dynamic_markings(fb_realization.segment_list, melody_parts, previous_dynamic_marking)
     handle_accidentals(fb_realization.segment_list)
     set_on_beat(fb_realization.segment_list, time_signature, start_offset)
