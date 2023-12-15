@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from music21 import converter, analysis
+from music21.chord import Chord
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
 from music21.improvedFiguredBass.notation import Modifier
@@ -30,8 +31,14 @@ def set_melody_pitches_at_strike(segments, melody_parts):
                 if idxs[i] == 0:
                     continue
                 idxs[i] -= 1
-            melody_pitch: Pitch = elts[idxs[i]].pitch
-            segment.melody_pitches_at_strike.add(melody_pitch)
+
+            elt = elts[idxs[i]]
+            if isinstance(elt, Chord):
+                chord_pitches = elt.pitches
+                segment.melody_pitches_at_strike.update(chord_pitches)
+            else:
+                melody_pitch = elt.pitch
+                segment.melody_pitches_at_strike.add(melody_pitch)
 
 
 def set_melody_pitches(segments, melody_parts):
@@ -52,9 +59,14 @@ def extend_melody_pitches(segments, melody_part):
         while i < len(notes) and notes[i].offset + notes[i].duration.quarterLength <= start_offset:
             i += 1
         while i < len(notes) and notes[i].offset < end_offset:
-            melody_pitch = notes[i].pitch
-            segment.melody_pitches.add(melody_pitch)
+            if isinstance(notes[i], Chord):
+                chord_pitches = notes[i].pitches
+                segment.melody_pitches.update(chord_pitches)
+            else:
+                melody_pitch = notes[i].pitch
+                segment.melody_pitches.add(melody_pitch)
             i += 1
+        i = max(0, i-1)  # note overlaps multiple segments
 
 
 def set_dynamic_markings(segments, melody_parts, prev_dynamic=None):
