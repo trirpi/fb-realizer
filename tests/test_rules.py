@@ -1,6 +1,17 @@
+import pytest
+
+from music21.improvedFiguredBass.segment import Segment
 from music21.improvedFiguredBass.possibility import Possibility
 from music21.improvedFiguredBass.rules import ParallelFifths, HiddenFifth, AvoidDoubling
 from music21.pitch import Pitch
+
+
+@pytest.fixture
+def segment() -> Segment:
+    s = Segment('D3', '6,4')
+    s.set_pitch_names_in_chord()
+    s.finish_initialization()
+    return s
 
 
 def test_parallel_fifth_rule():
