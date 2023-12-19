@@ -4,6 +4,10 @@ Module implementing algorithm for notes detection given in "Discovering Patterns
 from collections import defaultdict
 from dataclasses import dataclass
 
+from tqdm import tqdm
+
+from music21.stream import Score, Part
+
 
 @dataclass(frozen=True)
 class Melody:
@@ -11,8 +15,12 @@ class Melody:
     length: int
 
 
-def detect_melody(melody) -> Melody:
-    md = RepeatedPatternFinder(melody)
+def detect_melody(score: Score, min_length=1, max_length=None, max_length_difference=1) -> Melody:
+    merged_parts: Part = score.parts[0]
+    for part in score.parts[1:]:
+        merged_parts += part
+
+    md = RepeatedPatternFinder(merged_parts.flat.notesAndRests)
     return md.get_best_melody()
 
 
@@ -50,7 +58,7 @@ class RepeatedPatternFinder:
         self._similarity_graph = defaultdict(dict)
 
         # base case
-        for i in range(0, len(self.notes) - 1):
+        for i in tqdm(range(0, len(self.notes) - 1), leave=False, desc="Base Case"):
             for j in range(i+1, len(self.notes)):
                 m1 = Melody(i, 0)
                 m2 = Melody(j, 0)
@@ -66,7 +74,7 @@ class RepeatedPatternFinder:
                     self._similarity_graph[m1][m2e] = self.contribution(None, j) + self._similarity_graph[m1][m2p]
 
         # fill in rest
-        for length in range(1, self.max_length):
+        for length in tqdm(range(1, self.max_length)):
             for i in range(0, len(self.notes) - 1):
                 for j in range(i + 1, len(self.notes)):
                     self.fill_dp(i, j, length, length)
@@ -109,6 +117,8 @@ class RepeatedPatternFinder:
     def contribution(self, i: int | None, j: int | None):
         if i is None:
             return self.contribution(j, i)
-        if j is None:
+        elif self.notes[i].isRest:
+            return 0
+        elif j is None or self.notes[j].isRest:
             return 0
         return int(self.notes[i].pitch == self.notes[j].pitch)

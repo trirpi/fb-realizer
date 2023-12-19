@@ -1,7 +1,10 @@
+from pathlib import Path
+
 import pytest
 
+from music21 import converter
 from music21.note import Note
-from melody_detection import RepeatedPatternFinder, Melody
+from melody_detection import RepeatedPatternFinder, Melody, detect_melody
 
 
 @pytest.fixture
@@ -59,3 +62,13 @@ def test_get_best_melody(rpf):
     best_melody = rpf.get_best_melody()
     assert best_melody.length == 4
     assert best_melody.index == 0
+
+
+def test_melody_score():
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / 'SWV_378.musicxml'
+
+    score = converter.parse(file_path)
+
+    melody = detect_melody(score, max_length_difference=0, max_length=8)
+    assert melody.length > 0
