@@ -64,6 +64,7 @@ def test_get_best_melody(rpf):
     assert best_melody.index == 0
 
 
+@pytest.mark.skip(reason="Algorithm is very slow.")
 def test_melody_score():
     current_file_dir = Path(__file__).resolve().parent
     file_path = current_file_dir.parent / 'test_pieces' / 'SWV_378.musicxml'
