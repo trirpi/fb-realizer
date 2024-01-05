@@ -9,14 +9,14 @@ from melody_detection import RepeatedPatternFinder, Melody, detect_melody
 
 @pytest.fixture
 def notes():
-    return [Note('C4'), Note('D4'), Note('E4'), Note('C4'), Note('F5'),
-            Note('C4'), Note('D4'), Note('E4'), Note('C4'), Note('G4'),
+    return [Note('C4'), Note('D4', quarterLength=4), Note('E4'), Note('C4'), Note('F5'),
+            Note('C4', quarterLength=4), Note('D4'), Note('E4'), Note('C4'), Note('G4'),
             Note('C3'), Note('D3'), Note('E3'), Note('C3')]
 
 
 @pytest.fixture
 def rpf(notes):
-    return RepeatedPatternFinder(notes, max_length_difference=2)
+    return RepeatedPatternFinder(notes, max_length_difference=2, max_length=8)
 
 
 def test_contribution_detection(rpf):
@@ -64,7 +64,13 @@ def test_get_best_melody(rpf):
     assert best_melody.index == 0
 
 
-@pytest.mark.skip(reason="Algorithm is very slow.")
+def test_get_best_melody_lengths(notes):
+    rpf = RepeatedPatternFinder(notes, max_length_difference=2, max_duration=4)
+    best_melody = rpf.get_best_melody()
+    assert best_melody.length == 3
+    assert best_melody.index == 2
+
+
 def test_melody_score():
     current_file_dir = Path(__file__).resolve().parent
     file_path = current_file_dir.parent / 'test_pieces' / 'SWV_378.musicxml'

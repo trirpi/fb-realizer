@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 from tqdm import tqdm
 
-from music21.stream import Score, Part
+from music21.note import GeneralNote
+from music21.stream import Score
 
 
 @dataclass(frozen=True)
@@ -15,12 +16,28 @@ class Melody:
     length: int
 
 
-def detect_melody(score: Score, min_length=1, max_length=None, max_length_difference=1) -> Melody:
-    merged_parts: Part = score.parts[0]
-    for part in score.parts[1:]:
-        merged_parts += part
+def overlap(m1: Melody, m2: Melody) -> bool:
+    """
+    Returns whether there is overlap between melody 1 and melody 2.
+    """
+    if m1.index > m2.index:
+        return overlap(m2, m1)
 
-    md = RepeatedPatternFinder(merged_parts.flat.notesAndRests)
+    return m1.index + m1.length > m2.index
+
+
+def detect_melody(score: Score, min_length=1, max_length=None, max_length_difference=1) -> Melody:
+    merged_parts: list[GeneralNote] = list(score.parts[0].flatten().notesAndRests)
+    for part in score.parts[1:]:
+        notes_and_rests = list(part.flatten().notesAndRests)
+        merged_parts += notes_and_rests
+
+    md = RepeatedPatternFinder(
+        merged_parts,
+        min_length=min_length,
+        max_length=max_length,
+        max_length_difference=max_length_difference
+    )
     return md.get_best_melody()
 
 
@@ -29,12 +46,25 @@ class RepeatedPatternFinder:
     Helper class to implement the notes detection approach.
     """
 
-    def __init__(self, notes, min_length=1, max_length=None, max_length_difference=1):
-        self.notes = notes
+    SIMILARITY_THRESHOLD = 1
+
+    def __init__(
+            self,
+            notes,
+            min_length=1,
+            max_length=None,
+            max_length_difference=1,
+            min_duration=0,
+            max_duration=float('inf')
+    ):
+        self.notes = list(notes)
 
         self.min_length = min_length
         self.max_length = max_length or len(self.notes)
         self.max_length_difference = max_length_difference
+
+        self.min_duration = min_duration
+        self.max_duration = max_duration
 
         self._similarity_graph = None
 
@@ -45,12 +75,20 @@ class RepeatedPatternFinder:
         best_melody = None
         best_prominence = -float('inf')
 
-        for length in range(self.min_length, self.max_length+1):
-            for index in range(len(self.notes)):
+        for length in range(self.min_length, self.max_length + 1):
+            duration = sum([self.notes[i].duration.quarterLength for i in range(length)])
+            for index in range(len(self.notes) - length + 1):
                 melody = Melody(index, length)
-                if (prominence := self.prominence(melody)) > best_prominence:
+                if (
+                    self.min_duration <= duration <= self.max_duration and
+                    (prominence := self.prominence(melody)) > best_prominence
+                ):
                     best_melody = melody
                     best_prominence = prominence
+
+                if index + length < len(self.notes):
+                    next_note_quarter_length = self.notes[index + length].duration.quarterLength
+                    duration -= self.notes[index].duration.quarterLength - next_note_quarter_length
 
         return best_melody
 
@@ -59,28 +97,28 @@ class RepeatedPatternFinder:
 
         # base case
         for i in tqdm(range(0, len(self.notes) - 1), leave=False, desc="Base Case"):
-            for j in range(i+1, len(self.notes)):
+            for j in range(i + 1, len(self.notes)):
                 m1 = Melody(i, 0)
                 m2 = Melody(j, 0)
                 self._similarity_graph[m1][m2] = 0
 
-                for m in range(1, self.max_length_difference+1):
+                for m in range(1, self.max_length_difference + 1):
                     m1e = Melody(i, m)
-                    m1p = Melody(i, m-1)
+                    m1p = Melody(i, m - 1)
                     self._similarity_graph[m1e][m2] = self.contribution(i, None) + self._similarity_graph[m1p][m2]
 
                     m2e = Melody(j, m)
-                    m2p = Melody(j, m-1)
+                    m2p = Melody(j, m - 1)
                     self._similarity_graph[m1][m2e] = self.contribution(None, j) + self._similarity_graph[m1][m2p]
 
         # fill in rest
-        for length in tqdm(range(1, self.max_length)):
-            for i in range(0, len(self.notes) - 1):
+        for length in range(1, self.max_length):
+            for i in tqdm(range(0, len(self.notes) - 1), leave=False, desc=f"Length {length}/{self.max_length}"):
                 for j in range(i + 1, len(self.notes)):
                     self.fill_dp(i, j, length, length)
 
                     ml = min(length + self.max_length_difference, self.max_length)
-                    for m in range(length+1, ml+1):
+                    for m in range(length + 1, ml + 1):
                         self.fill_dp(i, j, m, length)
                         self.fill_dp(i, j, length, m)
 
@@ -110,9 +148,10 @@ class RepeatedPatternFinder:
 
         prominence = 0
         for neighbor, similarity in self._similarity_graph[m].items():
-            prominence += similarity
-        prominence *= 1.1  # longer is better
-        return prominence / m.length
+            if similarity > self.SIMILARITY_THRESHOLD and not overlap(m, neighbor):
+                prominence += similarity
+
+        return prominence
 
     def contribution(self, i: int | None, j: int | None):
         if i is None:
