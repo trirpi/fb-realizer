@@ -49,15 +49,15 @@ def test_segment(segment):
 
 
 def test_intermediate_note(segment, possibility):
-    intermediate_notes = segment.get_intermediate_int_pitches(possibility)
-    assert len(intermediate_notes) == 4
+    intermediate_notes = list(segment.get_intermediate_int_pitches(possibility, possibility))
+    assert len(intermediate_notes) == 7
     pitch, voice = intermediate_notes[0]
     assert voice == 0
     assert pitch == Pitch('E3').ps
-    pitch, voice = intermediate_notes[1]
+    pitch, voice = intermediate_notes[2]
     assert voice == 0
     assert pitch == Pitch('C3').ps
-    pitch, voice = intermediate_notes[3]
+    pitch, voice = intermediate_notes[5]
     assert voice == 1
     assert pitch == Pitch('F3').ps
 
