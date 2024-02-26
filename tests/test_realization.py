@@ -111,6 +111,7 @@ def test_realizations(piece_name, args):
     realize_from_path(file_path, start_measure=0, end_measure=2)
 
 
+@pytest.mark.skip("Visual test")
 def test_realization_speed():
     # rc('text', usetex=True)
     # rc('font', size=14)
