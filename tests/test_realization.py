@@ -1,6 +1,8 @@
 from pathlib import Path
+from timeit import default_timer
 
 import pytest
+from matplotlib import pyplot as plt, rc
 
 import realize
 from music21 import converter
@@ -107,3 +109,30 @@ def test_realizations(piece_name, args):
     current_file_dir = Path(__file__).resolve().parent
     file_path = current_file_dir.parent / 'test_pieces' / args['path']
     realize_from_path(file_path, start_measure=0, end_measure=2)
+
+
+def test_realization_speed():
+    # rc('text', usetex=True)
+    # rc('font', size=14)
+    # rc('legend', fontsize=13)
+    # rc('text.latex', preamble=r'\usepackage{cmbright}')
+    current_file_dir = Path(__file__).resolve().parent
+    file_path = current_file_dir.parent / 'test_pieces' / 'Erhore_mich_wenn_ich_rufe_Schutz.musicxml'
+    num_bass_notes = []
+    speeds = []
+    for i in range(2, 45, 5):
+        s = []
+        n = 1
+        r = 2
+        for _ in range(r):
+            start = default_timer()
+            _, n, t = realize_from_path(file_path, start_measure=0, end_measure=i)
+            end = default_timer()
+            s.append(end - start)
+        num_bass_notes.append(n)
+        speeds.append(sum(s) / r)
+    plt.plot(num_bass_notes, speeds)
+    plt.xlabel("Number bass notes.")
+    plt.ylabel("Execution time (s)")
+    plt.show()
+    print("done")
