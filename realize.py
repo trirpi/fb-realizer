@@ -237,8 +237,11 @@ def realize_from_path(path, start_measure, end_measure):
     parts = score.parts
     basso_continuo_stream = parts[-1]
 
+    num_bass_notes = len(basso_continuo_stream.flatten().notes)
+    num_total_notes = len(parts.flatten().notes)
+
     realized_part = realize_part(basso_continuo_stream, score)
-    return create_score(parts, realized_part)
+    return create_score(parts, realized_part) #, num_bass_notes, num_total_notes
 
 
 def set_key(bass_part, score):
