@@ -1,9 +1,10 @@
 import argparse
+import copy
 import logging
 import sys
 from pathlib import Path
 
-from music21 import converter, analysis
+from music21 import converter, analysis, key
 from music21.chord import Chord
 from music21.dynamics import Dynamic
 from music21.improvedFiguredBass import realizer
@@ -101,6 +102,8 @@ def set_dynamic_markings(segments, melody_parts, prev_dynamic=None):
 
 def split_on_rests(bc, melodies):
     result = []
+    sf = bc.flatten()
+    key_sig = sf[key.KeySignature].first()
 
     current_melodies = melodies
     current = bc
@@ -121,7 +124,7 @@ def split_on_rests(bc, melodies):
             start_offset = rest_end
             prev, current = current.splitAtQuarterLength(rest_start)
             _, current = current.splitAtQuarterLength(rest_length)
-            current = current.notesAndRests
+            current.insert(0, copy.deepcopy(key_sig))
             prev_mels = []
             new_mels = []
             for mel in current_melodies:
@@ -174,12 +177,10 @@ def handle_accidentals(segment_list):
             else:
                 past_measure[note_name] = (Modifier('natural'), segment_measure)
         for note in list(past_measure.keys()):
-            if past_measure[note][1] < segment_measure - 1:
+            if past_measure[note][1] < segment_measure:
                 del past_measure[note]
 
         for key, modifier in segment.fbScale.modify.items():
-            if key in past_measure and past_measure[key][1] < segment_measure - 1:
-                del past_measure[key]
             if (
                     key in past_measure and
                     (
