@@ -9,8 +9,8 @@
     <creator type="composer"> François Couperin (1668 — 1733)</creator>
     <rights>Public Domain - Non-PD US</rights>
     <encoding>
-      <software>MuseScore 4.1.1</software>
-      <encoding-date>2023-11-03</encoding-date>
+      <software>MuseScore 4.2.1</software>
+      <encoding-date>2024-02-26</encoding-date>
       <supports element="accidental" type="yes"/>
       <supports element="beam" type="yes"/>
       <supports element="print" attribute="new-page" type="no"/>
@@ -50,7 +50,7 @@
         <midi-channel>2</midi-channel>
         <midi-program>74</midi-program>
         <volume>78.7402</volume>
-        <pan>31</pan>
+        <pan>29</pan>
         </midi-instrument>
       </score-part>
     <part-group type="stop" number="1"/>
@@ -84,9 +84,6 @@
           <sign>G</sign>
           <line>2</line>
           </clef>
-        <staff-details print-object="no">
-          <staff-lines>5</staff-lines>
-          </staff-details>
         </attributes>
       <direction placement="above">
         <direction-type>
@@ -3176,9 +3173,6 @@
           <sign>G</sign>
           <line>2</line>
           </clef>
-        <staff-details print-object="no">
-          <staff-lines>5</staff-lines>
-          </staff-details>
         </attributes>
       <note>
         <rest/>
@@ -8382,23 +8376,23 @@
         </note>
       <note>
         <rest/>
-        <duration>4</duration>
-        <voice>1</voice>
-        <type>quarter</type>
-        </note>
-      <note>
-        <rest/>
-        <duration>8</duration>
+        <duration>12</duration>
         <voice>1</voice>
         <type>half</type>
+        <dot/>
         </note>
       </measure>
     <measure number="9">
       <note>
-        <rest/>
+        <pitch>
+          <step>A</step>
+          <alter>-1</alter>
+          <octave>3</octave>
+          </pitch>
         <duration>4</duration>
         <voice>1</voice>
         <type>quarter</type>
+        <stem>down</stem>
         </note>
       <note>
         <pitch>
