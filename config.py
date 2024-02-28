@@ -2,7 +2,7 @@ default_piece = "test_maat"
 
 pieces = {
     "ErhoreMich": {"path": "Erhore_mich_wenn_ich_rufe_Schutz.musicxml"},
-    "OboeConcerto": {"path": "Oboe_Concerto_in_D_minor_Op9_No2_Tomaso_Albinoni2.musicxml"},
+    "OboeConcerto": {"path": "Oboe_Concerto_in_D_minor_Op9_No2_Tomaso_Albinoni.musicxml"},
     "SWV_378": {"path": "SWV_378.musicxml"},
     "test_tussennoot": {"path": "test_tussennoot.musicxml"},
     "test_maat": {"path": "test_maat.musicxml"},
