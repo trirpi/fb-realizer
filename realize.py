@@ -181,8 +181,6 @@ def handle_accidentals(segment_list):
                 del past_measure[note]
 
         for key, modifier in segment.fbScale.modify.items():
-            if modifier.accidental is None:
-                modifier = Modifier('natural')
             if (
                     key in past_measure and
                     (
@@ -191,7 +189,7 @@ def handle_accidentals(segment_list):
                     )
             ):
                 past_measure[key] = (Modifier('natural'), segment_measure)
-            else:
+            elif modifier.accidental is not None:
                 if modifier.accidental.name == 'sharp' and Pitch(key).ps - segment.bassNote.pitch.ps in MAJOR_INTERVALS:
                     modifier.accidental = Accidental('natural')
                 elif modifier.accidental.name == 'flat' and Pitch(
