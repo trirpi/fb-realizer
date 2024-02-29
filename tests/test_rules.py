@@ -55,6 +55,6 @@ def test_hidden_fifth_rule():
 
 def test_avoid_doubling(segment):
     ad = AvoidDoubling(cost=1)
-    assert ad.get_cost(Possibility((1,2,3)), segment) == 0
-    assert ad.get_cost(Possibility((1,2,2)), segment) == 1
-    assert ad.get_cost(Possibility((1,2,14)), segment) == 1
+    assert ad.get_cost(Possibility((Pitch('C3'), Pitch('D4'), Pitch('E4'))), segment) == 0
+    assert ad.get_cost(Possibility((Pitch('C3'), Pitch('C3'), Pitch('E4'))), segment) == 1
+    assert ad.get_cost(Possibility((Pitch('C3'), Pitch('C4'), Pitch('E4'))), segment) == 1

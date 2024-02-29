@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 from timeit import default_timer
 
 import pytest
@@ -113,27 +114,34 @@ def test_realizations(piece_name, args):
 
 @pytest.mark.skip("Visual test")
 def test_realization_speed():
-    # rc('text', usetex=True)
-    # rc('font', size=14)
-    # rc('legend', fontsize=13)
-    # rc('text.latex', preamble=r'\usepackage{cmbright}')
+    plt.rcdefaults()
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "font.size": 14,
+    })
+
     current_file_dir = Path(__file__).resolve().parent
     file_path = current_file_dir.parent / 'test_pieces' / 'Erhore_mich_wenn_ich_rufe_Schutz.musicxml'
-    num_bass_notes = []
-    speeds = []
-    for i in range(2, 45, 5):
-        s = []
-        n = 1
-        r = 2
-        for _ in range(r):
-            start = default_timer()
-            _, n, t = realize_from_path(file_path, start_measure=0, end_measure=i)
-            end = default_timer()
-            s.append(end - start)
-        num_bass_notes.append(n)
-        speeds.append(sum(s) / r)
-    plt.plot(num_bass_notes, speeds)
-    plt.xlabel("Number bass notes.")
+
+    x = []
+    y = []
+    for i in range(20):
+        random_num_measures = random.randint(15, 40)
+        random_start_measure = random.randint(0, 60-random_num_measures)
+        end_measure = random_start_measure + random_num_measures
+
+        start = default_timer()
+        _, num_b, num_m = realize_from_path(file_path, start_measure=random_start_measure, end_measure=end_measure)
+        # num_b = random.randint(5, 10)
+        end = default_timer()
+
+        x.append(num_b)
+        y.append(end - start)
+    plt.scatter(x, y)
+    plt.xlabel("Number of bass notes")
     plt.ylabel("Execution time (s)")
+    plt.savefig("bass_notes_execution_time.eps", format="eps", dpi=1200, bbox_inches="tight", transparent=True)
     plt.show()
     print("done")
